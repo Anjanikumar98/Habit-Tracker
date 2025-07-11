@@ -1,69 +1,74 @@
 import 'package:flutter/material.dart';
-
-import 'main.dart';
+import 'main.dart'; // Make sure this contains your habits2 list
 
 class ListItem extends StatelessWidget {
   final int id;
+  final Map<String, dynamic> habit;
 
-  const ListItem({Key? key, required this.id}) : super(key: key);
+  const ListItem({Key? key, required this.id, required this.habit}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
+    final bool isChecked = habit['progressValue'] >= 1.0;
+
     return InkWell(
       onTap: () {
-        Navigator.pushNamed(context, '/details');
+        Navigator.pushNamed(context, '/details', arguments: habit);
       },
       child: Container(
-        // height: 150,
-        margin: EdgeInsets.symmetric(vertical: 21.0),
-        padding: EdgeInsets.only(right: 25.0),
+        margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+        padding: const EdgeInsets.only(right: 25.0),
         child: Column(
-          children: <Widget>[
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
-              children: <Widget>[
+              children: [
                 Container(
-                  padding: EdgeInsets.all(5.0),
+                  padding: const EdgeInsets.all(6.0),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: id == 0 ? habits2[id]['color'] : Colors.transparent,
-                    border:
-                        id == 0
-                            ? Border()
-                            : Border.all(color: Colors.grey.shade500),
+                    color: isChecked ? habit['color'] : Colors.transparent,
+                    border: Border.all(
+                      color: isChecked ? habit['color'] : Colors.grey.shade500,
+                    ),
                   ),
                   child: Icon(
                     Icons.check,
-                    color: id == 0 ? Colors.white : Colors.grey.shade500,
+                    color: isChecked ? Colors.white : Colors.grey.shade500,
+                    size: 18,
                   ),
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
+                  children: [
                     Text(
-                      habits2[id]['objectif'],
-                      style: TextStyle(
+                      habit['title'] ?? 'Habit',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 19,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 5),
                     Text(
-                      habits2[id]['progress'],
+                      habit['progress'] ?? '',
                       style: TextStyle(
                         color: Colors.grey.shade500,
-                        fontSize: 17,
+                        fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 15),
                   ],
                 ),
               ],
             ),
+            const SizedBox(height: 10),
             LinearProgressIndicator(
-              value: .71,
-              backgroundColor: Color(0xff1c232d),
-              valueColor: AlwaysStoppedAnimation(habits2[id]['color']),
+              value: habit['progressValue'] ?? 0.0,
+              backgroundColor: const Color(0xff1c232d),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                habit['color'] ?? Colors.purple,
+              ),
             ),
           ],
         ),
