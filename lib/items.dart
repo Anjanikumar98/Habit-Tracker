@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // Make sure this contains your habits2 list
+import 'main.dart';
 
 class ListItem extends StatelessWidget {
   final int id;
