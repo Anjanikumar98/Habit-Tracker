@@ -5,7 +5,7 @@ class StreakBadge extends StatelessWidget {
 
   const StreakBadge({
     Key? key,
-    required this.streak,
+    required this.streak, required isActive,
   }) : super(key: key);
 
   @override

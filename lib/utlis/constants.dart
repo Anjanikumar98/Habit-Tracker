@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Constants {
   static const String appName = 'Habit Tracker';
   static const String appVersion = '1.0.0';
@@ -33,6 +35,13 @@ class Constants {
     '#5f27cd',
     '#00d2d3',
   ];
+
+  static final List<Color> habitColorList =
+      habitColors
+          .map(
+            (hex) => Color(int.parse(hex.substring(1), radix: 16) + 0xFF000000),
+          )
+          .toList();
 
   static const int maxHabitNameLength = 50;
   static const int maxDescriptionLength = 200;
