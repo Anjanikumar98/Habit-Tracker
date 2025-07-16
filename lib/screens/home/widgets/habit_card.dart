@@ -1,90 +1,118 @@
-import 'package:flutter/material.dart';
-import '../../../models/habit.dart';
-import '../../../widgets/completion_button.dart';
-import '../../../widgets/habit_progress_indicator.dart';
-import '../../../widgets/streak_badge.dart';
-
-class HabitCard extends StatelessWidget {
-  final Habit habit;
-  final VoidCallback onTap;
-  final VoidCallback onComplete;
-
-  const HabitCard({
-    Key? key,
-    required this.habit,
-    required this.onTap,
-    required this.onComplete,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: habit.color,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          habit.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          habit.category,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  StreakBadge(streak: habit.currentStreak),
-                  const SizedBox(width: 8),
-                  CompletionButton(
-                    isCompleted: habit.isCompletedToday,
-                    color: habit.color,
-                    onPressed: onComplete,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              HabitProgressIndicator(
-                progress: habit.weeklyProgress,
-                color: habit.color,
-                label: '${habit.completedThisWeek} of ${habit.weeklyGoal} this week',
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import '../../../models/habit.dart';
+// import '../../../widgets/completion_button.dart';
+// import '../../../widgets/streak_badge.dart';
+//
+// class HabitCard extends StatelessWidget {
+//   final Habit habit;
+//
+//   const HabitCard({Key? key, required this.habit}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Consumer<HabitProvider>(
+//       builder: (context, habitProvider, child) {
+//         final isCompleted = habitProvider.isHabitCompletedToday(habit.id);
+//         final completionRate = habitProvider.getCompletionRate(habit.id);
+//
+//         return Card(
+//           margin: const EdgeInsets.only(bottom: 12),
+//           child: InkWell(
+//             onTap:
+//                 () => Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (_) => HabitDetailScreen(habit: habit),
+//                   ),
+//                 ),
+//             borderRadius: BorderRadius.circular(12),
+//             child: Padding(
+//               padding: const EdgeInsets.all(16),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Row(
+//                     children: [
+//                       Container(
+//                         width: 4,
+//                         height: 40,
+//                         decoration: BoxDecoration(
+//                           color: Color(
+//                             int.parse(habit.color.substring(1), radix: 16) +
+//                                 0xFF000000,
+//                           ),
+//                           borderRadius: BorderRadius.circular(2),
+//                         ),
+//                       ),
+//                       const SizedBox(width: 12),
+//                       Expanded(
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Text(
+//                               habit.name,
+//                               style: const TextStyle(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.w600,
+//                               ),
+//                             ),
+//                             if (habit.description.isNotEmpty)
+//                               Text(
+//                                 habit.description,
+//                                 style: TextStyle(
+//                                   fontSize: 14,
+//                                   color: Colors.grey[600],
+//                                 ),
+//                                 maxLines: 2,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                           ],
+//                         ),
+//                       ),
+//                       CompletionButton(
+//                         isCompleted: isCompleted,
+//                         onPressed: () {
+//                           if (!isCompleted) {
+//                             habitProvider.completeHabit(habit.id);
+//                           }
+//                         },
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 12),
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       Row(
+//                         children: [
+//                           StreakBadge(
+//                             streak: habit.currentStreak,
+//                             isActive: habit.currentStreak > 0,
+//                           ),
+//                           const SizedBox(width: 8),
+//                           Text(
+//                             '${(completionRate * 100).toInt()}% complete',
+//                             style: TextStyle(
+//                               fontSize: 12,
+//                               color: Colors.grey[600],
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                       Text(
+//                         habit.frequency,
+//                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+// }
 

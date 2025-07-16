@@ -1,20 +1,41 @@
-class AppConstants {
+class Constants {
   static const String appName = 'Habit Tracker';
-  static const int maxHabits = 50;
+  static const String appVersion = '1.0.0';
+
   static const List<String> categories = [
-    'Health',
-    'Learning',
+    'Health & Fitness',
+    'Personal Development',
     'Productivity',
     'Social',
-    'Fitness',
+    'Hobbies',
+    'Finance',
+    'Education',
     'Mindfulness',
-    'Other'
+    'Other',
   ];
 
   static const List<String> frequencies = [
     'Daily',
     'Weekly',
     'Monthly',
-    'Custom'
+    'Custom',
   ];
+
+  static const List<String> habitColors = [
+    '#6f1bff',
+    '#ff6b6b',
+    '#4ecdc4',
+    '#45b7d1',
+    '#96ceb4',
+    '#feca57',
+    '#ff9ff3',
+    '#54a0ff',
+    '#5f27cd',
+    '#00d2d3',
+  ];
+
+  static const int maxHabitNameLength = 50;
+  static const int maxDescriptionLength = 200;
+  static const int maxTagsCount = 5;
+  static const int streakGoal = 21;
 }

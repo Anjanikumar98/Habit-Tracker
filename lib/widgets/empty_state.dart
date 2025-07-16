@@ -4,7 +4,7 @@ class EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final VoidCallback? onAction;
+  final VoidCallback? onActionPressed;
   final String? actionText;
 
   const EmptyState({
@@ -12,51 +12,40 @@ class EmptyState extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.onAction,
+    this.onActionPressed,
     this.actionText,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 80,
-              color: Colors.grey[600],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          if (onActionPressed != null) ...[
             const SizedBox(height: 24),
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
+            ElevatedButton(
+              onPressed: onActionPressed,
+              child: Text(actionText ?? 'Get Started'),
             ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (onAction != null && actionText != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onAction,
-                child: Text(actionText!),
-              ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }

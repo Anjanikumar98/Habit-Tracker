@@ -1,54 +1,60 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import '../../../providers/habit_provider.dart';
+// import '../../../widgets/habit_progress_indicator.dart';
+//
 // class ProgressSummary extends StatelessWidget {
+//   const ProgressSummary({super.key});
+//
 //   @override
 //   Widget build(BuildContext context) {
 //     return Consumer<HabitProvider>(
 //       builder: (context, habitProvider, child) {
-//         final totalHabits = habitProvider.habits.length;
-//         final completedToday = habitProvider.habits
-//             .where((habit) => habit.isCompletedToday)
-//             .length;
-//         final weeklyCompletion = habitProvider.getWeeklyCompletionRate();
+//         final habits = habitProvider.habits;
+//         final completedToday =
+//             habits
+//                 .where((h) => habitProvider.isHabitCompletedToday(h.id))
+//                 .length;
+//         final totalHabits = habits.length;
+//         final progress = totalHabits > 0 ? completedToday / totalHabits : 0.0;
 //
 //         return Container(
 //           margin: const EdgeInsets.all(16),
 //           padding: const EdgeInsets.all(20),
 //           decoration: BoxDecoration(
 //             gradient: const LinearGradient(
-//               colors: [Color(0xff6f1bff), Color(0xff9c4dff)],
+//               colors: [Color(0xFF6F1BFF), Color(0xFF9B59B6)],
 //               begin: Alignment.topLeft,
 //               end: Alignment.bottomRight,
 //             ),
 //             borderRadius: BorderRadius.circular(16),
 //           ),
 //           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
 //             children: [
+//               const Text(
+//                 'Today\'s Progress',
+//                 style: TextStyle(
+//                   color: Colors.white,
+//                   fontSize: 18,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
 //               Row(
 //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                 children: [
-//                   _buildStat('Today', '$completedToday/$totalHabits'),
-//                   _buildStat('This Week', '${(weeklyCompletion * 100).toInt()}%'),
-//                   _buildStat('Total Habits', '$totalHabits'),
+//                   _buildStat('Completed', '$completedToday'),
+//                   _buildStat('Total', '$totalHabits'),
+//                   _buildStat('Progress', '${(progress * 100).toInt()}%'),
 //                 ],
 //               ),
 //               const SizedBox(height: 16),
 //               LinearProgressIndicator(
-//                 value: totalHabits > 0 ? completedToday / totalHabits : 0,
-//                 backgroundColor: Colors.white30,
-//                 valueColor: const AlwaysStoppedAnimation(Colors.white),
-//               ),
-//               const SizedBox(height: 8),
-//               Text(
-//                 totalHabits > 0
-//                     ? 'You\'ve completed ${((completedToday / totalHabits) * 100).toInt()}% of your habits today!'
-//                     : 'Add your first habit to get started!',
-//                 style: const TextStyle(
-//                   color: Colors.white,
-//                   fontSize: 14,
-//                 ),
-//                 textAlign: TextAlign.center,
+//                 value: progress,
+//                 backgroundColor: Colors.white.withOpacity(0.3),
+//                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+//                 minHeight: 6,
 //               ),
 //             ],
 //           ),
@@ -64,17 +70,13 @@ import 'package:provider/provider.dart';
 //           value,
 //           style: const TextStyle(
 //             color: Colors.white,
-//             fontSize: 24,
+//             fontSize: 20,
 //             fontWeight: FontWeight.bold,
 //           ),
 //         ),
-//         const SizedBox(height: 4),
 //         Text(
 //           label,
-//           style: const TextStyle(
-//             color: Colors.white70,
-//             fontSize: 12,
-//           ),
+//           style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
 //         ),
 //       ],
 //     );
