@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/providers/habit_provider.dart';
+import 'package:habit_tracker/providers/settings_provider.dart';
+import 'package:habit_tracker/services/notification_service.dart';
 import 'package:habit_tracker/utlis/theme.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -16,9 +19,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ChangeNotifierProvider(create: (_) => HabitProvider()),
-        // ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        // ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => HabitProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
