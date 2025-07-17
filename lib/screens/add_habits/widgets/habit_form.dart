@@ -208,6 +208,7 @@ class _HabitFormState extends State<HabitForm> {
         tags: _tags,
         createdAt: widget.habit?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        completions: [],
       );
 
       final provider = context.read<HabitProvider>();
@@ -221,3 +222,7 @@ class _HabitFormState extends State<HabitForm> {
     }
   }
 }
+
+
+
+

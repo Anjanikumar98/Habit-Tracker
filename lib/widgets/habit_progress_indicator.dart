@@ -22,10 +22,7 @@ class HabitProgressIndicator extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
             ),
             Text(
               '${(progress * 100).toInt()}%',

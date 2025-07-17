@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/screens/habits_detail/widegts/completion_calendar.dart';
+import 'package:habit_tracker/screens/habits_detail/widegts/habit_stats.dart';
+import 'package:habit_tracker/screens/habits_detail/widegts/progress_chart.dart';
 import 'package:provider/provider.dart';
 import '../../models/habit.dart';
 import '../../providers/habit_provider.dart';
@@ -43,11 +46,11 @@ class HabitDetailScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // HabitStats(habit: habit),
-            // const SizedBox(height: 16),
-            // CompletionCalendar(habit: habit),
-            // const SizedBox(height: 16),
-            // ProgressChart(habit: habit),
+            HabitStats(habit: habit),
+            const SizedBox(height: 16),
+            CompletionCalendar(habit: habit),
+            const SizedBox(height: 16),
+            ProgressChart(habit: habit),
           ],
         ),
       ),

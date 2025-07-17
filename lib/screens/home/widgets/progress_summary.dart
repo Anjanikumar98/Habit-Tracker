@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/models/habit.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/habit_provider.dart';
-import '../../../widgets/habit_progress_indicator.dart';
 
 class ProgressSummary extends StatelessWidget {
   const ProgressSummary({super.key});
@@ -11,12 +11,14 @@ class ProgressSummary extends StatelessWidget {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         final habits = habitProvider.habits;
-        // final completedToday =
-        //     habits
-        //         .where((h) => habitProvider.isHabitCompletedToday(h.id))
-        //         .length;
+        final completedToday =
+            habits
+                .where(
+                  (h) => habitProvider.isHabitCompletedToday(h.id as Habit),
+                )
+                .length;
         final totalHabits = habits.length;
-       // final progress = totalHabits > 0 ? completedToday / totalHabits : 0.0;
+        final progress = totalHabits > 0 ? completedToday / totalHabits : 0.0;
 
         return Container(
           margin: const EdgeInsets.all(16),
@@ -44,14 +46,14 @@ class ProgressSummary extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // _buildStat('Completed', '$completedToday'),
-                  // _buildStat('Total', '$totalHabits'),
-                  // _buildStat('Progress', '${(progress * 100).toInt()}%'),
+                  _buildStat('Completed', '$completedToday'),
+                  _buildStat('Total', '$totalHabits'),
+                  _buildStat('Progress', '${(progress * 100).toInt()}%'),
                 ],
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
-               // value: progress,
+                // value: progress,
                 backgroundColor: Colors.white.withOpacity(0.3),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 6,

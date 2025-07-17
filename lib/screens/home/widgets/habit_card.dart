@@ -15,8 +15,8 @@ class HabitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
-        // final isCompleted = habitProvider.isHabitCompletedToday(habit.id);
-        // final completionRate = habitProvider.getCompletionRate(habit.id);
+        final isCompleted = habitProvider.isHabitCompletedToday(habit.id as Habit);
+        final completionRate = habitProvider.getCompletionRate(habit.id as Habit);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -72,14 +72,15 @@ class HabitCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // CompletionButton(
-                      //   isCompleted: isCompleted,
-                      //   onPressed: () {
-                      //     if (!isCompleted) {
-                      //       habitProvider.completeHabit(habit.id);
-                      //     }
-                      //   },
-                      // ),
+                      CompletionButton(
+                        isCompleted: isCompleted,
+                        onPressed: () {
+                          if (!isCompleted) {
+                            habitProvider.completeHabit(habit.id);
+                          }
+                        },
+                        color: Colors.white24,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -88,18 +89,18 @@ class HabitCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          // StreakBadge(
-                          //   streak: habit.currentStreak,
-                          //   isActive: habit.currentStreak > 0,
-                          // ),
+                          StreakBadge(
+                            streak: habit.currentStreak,
+                            isActive: habit.currentStreak > 0,
+                          ),
                           const SizedBox(width: 8),
-                          // Text(
-                          //   '${(completionRate * 100).toInt()}% complete',
-                          //   style: TextStyle(
-                          //     fontSize: 12,
-                          //     color: Colors.grey[600],
-                          //   ),
-                          // ),
+                          Text(
+                            '${(completionRate * 100).toInt()}% complete',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ],
                       ),
                       Text(
@@ -117,6 +118,5 @@ class HabitCard extends StatelessWidget {
     );
   }
 }
-
 
 

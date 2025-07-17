@@ -6,6 +6,7 @@ import '../../screens/statistics/statistics_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state.dart';
 import '../add_habits/add_habit_screen.dart';
+import '../setting/setting_screen.dart';
 import 'widgets/habit_card.dart';
 import 'widgets/progress_summary.dart';
 import 'widgets/quick_add_habit.dart';
@@ -50,8 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           _buildHomeTab(),
-          // const StatisticsScreen(),
-          // const SettingsScreen(),
+          const StatisticsScreen(),
+          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -89,8 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onRefresh: () => habitProvider.loadHabits(),
           child: Column(
             children: [
-              // const ProgressSummary(),
-              // const QuickAddHabit(),
+              const ProgressSummary(),
+              const QuickAddHabit(),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -108,5 +109,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-

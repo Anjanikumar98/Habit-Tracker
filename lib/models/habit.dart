@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'habit_completion.dart';
+
 class Habit {
   final String id;
   final String name;
@@ -16,6 +18,7 @@ class Habit {
   final TimeOfDay? reminderTime;
   final List<int> customFrequencyDays; // For custom frequency (weekdays)
   final int priority; // 1-5, where 5 is highest priority
+  final List<HabitCompletion> completions;
 
   Habit({
     required this.id,
@@ -24,6 +27,7 @@ class Habit {
     required this.category,
     required this.frequency,
     required this.color,
+    required this.completions,
     this.tags = const [],
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -70,6 +74,7 @@ class Habit {
       reminderTime: reminderTime ?? this.reminderTime,
       customFrequencyDays: customFrequencyDays ?? this.customFrequencyDays,
       priority: priority ?? this.priority,
+      completions: [],
     );
   }
 
@@ -121,6 +126,7 @@ class Habit {
         json['customFrequencyDays'] as List? ?? [],
       ),
       priority: json['priority'] as int? ?? 3,
+      completions: [],
     );
   }
 
@@ -182,6 +188,7 @@ class Habit {
               .toList() ??
           [],
       priority: map['priority'] as int? ?? 3,
+      completions: [],
     );
   }
 
@@ -330,5 +337,52 @@ class Habit {
         color.hashCode ^
         isActive.hashCode ^
         priority.hashCode;
+  }
+
+  // Returns all the dates on which the habit was completed
+  List<DateTime> get completedDates => completions.map((c) => c.date).toList();
+
+  // Total number of times this habit was completed
+  int get totalCompletions => completions.length;
+
+  // Current streak: number of consecutive days including today (if completed)
+  int get currentStreak {
+    if (completions.isEmpty) return 0;
+
+    List<DateTime> dates = completedDates;
+    dates.sort((a, b) => b.compareTo(a));
+
+    int streak = 0;
+    DateTime today = DateTime.now();
+    for (final date in dates) {
+      if (_isSameDate(date, today.subtract(Duration(days: streak)))) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // Longest consecutive streak of completions
+  int get longestStreak {
+    if (completions.isEmpty) return 0;
+    List<DateTime> dates = completedDates..sort();
+    int longest = 1, current = 1;
+
+    for (int i = 1; i < dates.length; i++) {
+      if (dates[i].difference(dates[i - 1]).inDays == 1) {
+        current++;
+        if (current > longest) longest = current;
+      } else if (dates[i] != dates[i - 1]) {
+        current = 1;
+      }
+    }
+    return longest;
+  }
+
+  // Helper method to check same calendar day
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }

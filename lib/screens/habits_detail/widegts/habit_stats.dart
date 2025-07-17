@@ -12,7 +12,7 @@ class HabitStats extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
-        // final completionRate = habitProvider.getCompletionRate(habit.id);
+        final completionRate = habitProvider.getCompletionRate(habit.id as Habit);
 
         return Container(
           margin: const EdgeInsets.all(16),
@@ -36,23 +36,23 @@ class HabitStats extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  // _buildStatItem('Current Streak', '${habit.currentStreak}'),
-                  // _buildStatItem('Longest Streak', '${habit.longestStreak}'),
-                  // _buildStatItem(
-                  //   'Total Completions',
-                  //   '${habit.totalCompletions}',
-                  // ),
+                  _buildStatItem('Current Streak', '${habit.currentStreak}'),
+                  _buildStatItem('Longest Streak', '${habit.longestStreak}'),
+                  _buildStatItem(
+                    'Total Completions',
+                    '${habit.totalCompletions}',
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
-              // Center(
-              //   child: Text(
-              //     'Completion Rate: ${completionRate.toStringAsFixed(1)}%',
-              //     style: Theme.of(
-              //       context,
-              //     ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-              //   ),
-              // ),
+              Center(
+                child: Text(
+                  'Completion Rate: ${completionRate.toStringAsFixed(1)}%',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.white),
+                ),
+              ),
             ],
           ),
         );

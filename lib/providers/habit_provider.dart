@@ -19,6 +19,27 @@ class HabitProvider extends ChangeNotifier {
     loadHabits();
   }
 
+  // Check if habit is completed today
+  bool isHabitCompletedToday(Habit habit) {
+    final today = DateTime.now();
+    return habit.completedDates.any(
+      (d) =>
+          d.year == today.year && d.month == today.month && d.day == today.day,
+    );
+  }
+
+  // Completion rate = total completions / total days since first completion
+  double getCompletionRate(Habit habit) {
+    if (habit.completions.isEmpty) return 0.0;
+
+    final firstDate = habit.completions
+        .map((c) => c.date)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+
+    final totalDays = DateTime.now().difference(firstDate).inDays + 1;
+    return habit.totalCompletions / totalDays;
+  }
+
   Future<void> loadHabits() async {
     _isLoading = true;
     _error = null;
@@ -215,4 +236,31 @@ class HabitProvider extends ChangeNotifier {
         date1.month == date2.month &&
         date1.day == date2.day;
   }
+
+  void completeHabit(String habitId) {
+    final habit = _habits.firstWhere(
+      (h) => h.id == habitId,
+      orElse: () => throw Exception('Habit not found'),
+    );
+
+    final now = DateTime.now();
+
+    // Avoid duplicate completion for the same day
+    final alreadyCompletedToday = habit.completedDates.any(
+      (d) => d.year == now.year && d.month == now.month && d.day == now.day,
+    );
+
+    if (!alreadyCompletedToday) {
+      final completion = HabitCompletion(
+        id: UniqueKey().toString(), // or use UUID if needed
+        habitId: habit.id,
+        date: now,
+        isCompleted: true,
+      );
+
+      habit.completions.add(completion);
+      notifyListeners();
+    }
+  }
 }
+

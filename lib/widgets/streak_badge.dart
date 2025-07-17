@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 class StreakBadge extends StatelessWidget {
   final int streak;
 
-  const StreakBadge({
-    Key? key,
-    required this.streak, required isActive,
-  }) : super(key: key);
+  const StreakBadge({Key? key, required this.streak, required isActive})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
