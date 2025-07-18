@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/models/motivational_card/motivation_card.dart';
 import 'package:provider/provider.dart';
 import '../../providers/habit_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -32,43 +33,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Habit Tracker',
-        showBackButton: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddHabitScreen()),
-                ),
-          ),
-        ],
-      ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          _buildHomeTab(),
-          const StatisticsScreen(),
-          const SettingsScreen(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Statistics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: 'Habit Tracker',
+          showBackButton: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+                  ),
+            ),
+          ],
+        ),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildHomeTab(),
+            const StatisticsScreen(),
+            const SettingsScreen(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.analytics),
+              label: 'Statistics',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -91,6 +94,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
+                const MotivationCard(),
+
                 const ProgressSummary(),
                 const QuickAddHabit(),
                 ListView.builder(

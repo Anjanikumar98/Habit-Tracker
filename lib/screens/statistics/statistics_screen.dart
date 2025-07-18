@@ -12,56 +12,61 @@ class StatisticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Statistics',
-        showBackButton: false,
-      ),
-      body: Consumer<HabitProvider>(
-        builder: (context, habitProvider, child) {
-          if (habitProvider.habits.isEmpty) {
-            return const EmptyState(
-              title: 'No Statistics Yet',
-              subtitle: 'Complete some habits to see your statistics and progress.',
-              icon: Icons.analytics,
-              actionText: 'Add Habit',
-            );
-          }
+    return SafeArea(
+      child: Scaffold(
+        appBar: const CustomAppBar(title: 'Statistics', showBackButton: false),
+        body: Consumer<HabitProvider>(
+          builder: (context, habitProvider, child) {
+            if (habitProvider.habits.isEmpty) {
+              return const EmptyState(
+                title: 'No Statistics Yet',
+                subtitle:
+                    'Complete some habits to see your statistics and progress.',
+                icon: Icons.analytics,
+                actionText: 'Add Habit',
+              );
+            }
 
-          return RefreshIndicator(
-            onRefresh: () => habitProvider.loadHabits(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildOverviewCard(context, habitProvider),
-                  const SizedBox(height: 16),
-                  const StreakDisplay(),
-                  const SizedBox(height: 16),
-                  const CompletionChart(),
-                  const SizedBox(height: 16),
-                  const HabitInsights(),
-                ],
+            return RefreshIndicator(
+              onRefresh: () => habitProvider.loadHabits(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildOverviewCard(context, habitProvider),
+                    const SizedBox(height: 16),
+                    const StreakDisplay(),
+                    const SizedBox(height: 16),
+                    const CompletionChart(),
+                    const SizedBox(height: 16),
+                    const HabitInsights(),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildOverviewCard(BuildContext context, HabitProvider habitProvider) {
     final totalHabits = habitProvider.habits.length;
-    final completedToday = habitProvider.habits.where((habit) =>
-        habit.completedDates.any((date) =>
-        date.year == DateTime.now().year &&
-            date.month == DateTime.now().month &&
-            date.day == DateTime.now().day
-        )
-    ).length;
+    final completedToday =
+        habitProvider.habits
+            .where(
+              (habit) => habit.completedDates.any(
+                (date) =>
+                    date.year == DateTime.now().year &&
+                    date.month == DateTime.now().month &&
+                    date.day == DateTime.now().day,
+              ),
+            )
+            .length;
 
-    final completionRate = totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0;
+    final completionRate =
+        totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0;
 
     return Card(
       child: Padding(
@@ -104,24 +109,20 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   Widget _buildStatItem(
-      BuildContext context,
-      String label,
-      String value,
-      IconData icon,
-      ) {
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Column(
       children: [
-        Icon(
-          icon,
-          size: 24,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
         const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         Text(
           label,

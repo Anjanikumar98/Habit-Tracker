@@ -37,6 +37,25 @@ class SettingsProvider extends ChangeNotifier {
     loadSettings();
   }
 
+  // Method to get formatted reminder time
+  String getFormattedReminderTime(BuildContext context) {
+    return _settings.reminderTime.format(context);
+  }
+
+  // Method to validate streak goal
+  bool isValidStreakGoal(int goal) {
+    return goal > 0 && goal <= 365;
+  }
+
+  // Method to get settings as exportable JSON
+  Map<String, dynamic> getExportableSettings() {
+    return {
+      ..._settings.toJson(),
+      'exportedAt': DateTime.now().toIso8601String(),
+      'appVersion': '1.0.0',
+    };
+  }
+
   Future<void> loadSettings() async {
     try {
       final loadedSettings = await _databaseService.getUserSettings();
@@ -207,6 +226,3 @@ class SettingsProvider extends ChangeNotifier {
     return languageNames[code] ?? 'Unknown';
   }
 }
-
-
-

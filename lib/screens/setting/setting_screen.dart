@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/providers/settings_provider.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
 import 'package:habit_tracker/screens/setting/widgets/theme_selector.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -9,25 +11,40 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(title: 'Settings', showBackButton: false),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSectionHeader(context, 'Appearance'),
-          const ThemeSelector(),
-          const SizedBox(height: 24),
+    return SafeArea(
+      child: Scaffold(
+        appBar: const CustomAppBar(title: 'Settings', showBackButton: false),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildSectionHeader(context, 'Appearance'),
+            const ThemeSelector(),
+            const SizedBox(height: 24),
 
-          _buildSectionHeader(context, 'Notifications'),
-          const NotificationSettings(),
-          const SizedBox(height: 24),
+            _buildSectionHeader(context, 'Notifications'),
+            const NotificationSettings(),
+            const SizedBox(height: 24),
 
-          // _buildSectionHeader(context, 'Data'),
-          // const BackupRestore(),
-          // const SizedBox(height: 24),
-          _buildSectionHeader(context, 'About'),
-          _buildAboutSection(context),
-        ],
+            _buildSectionHeader(context, 'Habits'),
+            _buildHabitsSection(context),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader(context, 'Language'),
+            _buildLanguageSection(context),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader(context, 'Data'),
+            const BackupRestore(),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader(context, 'About'),
+            _buildAboutSection(context),
+            const SizedBox(height: 24),
+
+            _buildResetSection(context),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -42,6 +59,72 @@ class SettingsScreen extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
+    );
+  }
+
+  Widget _buildHabitsSection(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) {
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.calendar_today),
+                  title: const Text('Week Starts On'),
+                  subtitle: Text(
+                    settingsProvider.weekStartsOnMonday ? 'Monday' : 'Sunday',
+                  ),
+                  trailing: Switch(
+                    value: settingsProvider.weekStartsOnMonday,
+                    onChanged:
+                        (value) => settingsProvider.toggleWeekStartsOnMonday(),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.local_fire_department),
+                  title: const Text('Streak Goal'),
+                  subtitle: Text('${settingsProvider.streakGoal} days'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _showStreakGoalDialog(context, settingsProvider),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.settings_backup_restore),
+                  title: const Text('Auto Backup'),
+                  subtitle: const Text('Automatically backup data'),
+                  trailing: Switch(
+                    value: settingsProvider.autoBackup,
+                    onChanged: (value) => settingsProvider.toggleAutoBackup(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageSection(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) {
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('Language'),
+            subtitle: Text(
+              settingsProvider.getLanguageName(settingsProvider.language),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showLanguageDialog(context, settingsProvider),
+          ),
+        );
+      },
     );
   }
 
@@ -81,6 +164,180 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildResetSection(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          Icons.restore,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: Text(
+          'Reset All Settings',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+        subtitle: const Text('Reset all settings to default values'),
+        onTap: () => _showResetDialog(context),
+      ),
+    );
+  }
+
+  Future<void> _showStreakGoalDialog(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+  ) async {
+    int currentGoal = settingsProvider.streakGoal;
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder:
+              (context, setState) => AlertDialog(
+                title: const Text('Set Streak Goal'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Choose your daily streak goal (1–365 days):'),
+                    const SizedBox(height: 16),
+                    Slider(
+                      value: currentGoal.toDouble(),
+                      min: 1,
+                      max: 365,
+                      divisions: 364,
+                      label: '$currentGoal days',
+                      onChanged: (value) {
+                        setState(() {
+                          currentGoal = value.toInt();
+                        });
+                      },
+                    ),
+                    Text('$currentGoal days'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, currentGoal),
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+        );
+      },
+    );
+
+    if (result != null) {
+      await settingsProvider.updateStreakGoal(result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Streak goal updated to $result days')),
+      );
+    }
+  }
+
+  Future<void> _showLanguageDialog(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+  ) async {
+    String selectedLanguage = settingsProvider.language;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder:
+              (context, setState) => AlertDialog(
+                title: const Text('Select Language'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children:
+                        settingsProvider.availableLanguages.map((langCode) {
+                          return RadioListTile<String>(
+                            value: langCode,
+                            groupValue: selectedLanguage,
+                            title: Text(
+                              settingsProvider.getLanguageName(langCode),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedLanguage = value!;
+                              });
+                            },
+                          );
+                        }).toList(),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, selectedLanguage),
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+        );
+      },
+    );
+
+    if (result != null && result != settingsProvider.language) {
+      await settingsProvider.updateLanguage(result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Language changed to ${settingsProvider.getLanguageName(result)}',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showResetDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Reset Settings'),
+            content: const Text(
+              'Are you sure you want to reset all settings to their default values? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                child: const Text('Reset'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed == true) {
+      final settingsProvider = Provider.of<SettingsProvider>(
+        context,
+        listen: false,
+      );
+      await settingsProvider.resetSettings();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Settings reset to default values')),
+        );
+      }
+    }
+  }
+
+  // Keep your existing dialog methods...
   void _showVersionDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -97,7 +354,7 @@ class SettingsScreen extends StatelessWidget {
                   'Build your better habits with our simple and intuitive habit tracker.',
                 ),
                 SizedBox(height: 8),
-                Text('© 2024 Habit Tracker App'),
+                Text('© 2025 Habit Tracker App'),
               ],
             ),
             actions: [
@@ -115,7 +372,13 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Help & Support'),
+            title: Row(
+              children: const [
+                Icon(Icons.help_outline, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Help & Support'),
+              ],
+            ),
             content: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +408,13 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Privacy Policy'),
+            title: Row(
+              children: const [
+                Icon(Icons.privacy_tip, color: Colors.green),
+                SizedBox(width: 8),
+                Text('Privacy Policy'),
+              ],
+            ),
             content: const SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +445,13 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Rate Our App'),
+            title: Row(
+              children: const [
+                Icon(Icons.star_rate, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('Rate Our App'),
+              ],
+            ),
             content: const Text(
               'Enjoying Habit Tracker? Please take a moment to rate us on the app store!',
             ),

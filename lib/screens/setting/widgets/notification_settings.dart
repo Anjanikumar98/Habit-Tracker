@@ -1,52 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:habit_tracker/providers/habit_provider.dart';
-import 'package:habit_tracker/services/notification_service.dart';
+import 'package:habit_tracker/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
-class NotificationSettings extends StatefulWidget {
+class NotificationSettings extends StatelessWidget {
   const NotificationSettings({super.key});
 
   @override
-  State<NotificationSettings> createState() => _NotificationSettingsState();
-}
-
-class _NotificationSettingsState extends State<NotificationSettings> {
-  bool _notificationsEnabled = true;
-
-  @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('Enable Notifications', style: TextStyle(fontSize: 16)),
-        Switch(
-          value: _notificationsEnabled,
-          onChanged: (value) async {
-            setState(() {
-              _notificationsEnabled = value;
-            });
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Enable/Disable Notifications
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Enable Notifications',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Switch(
+                      value: settingsProvider.notificationsEnabled,
+                      onChanged: (value) async {
+                        await settingsProvider.toggleNotifications();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value
+                                    ? 'Notifications enabled'
+                                    : 'Notifications disabled',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
 
-            final habitProvider = Provider.of<HabitProvider>(
-              context,
-              listen: false,
-            );
-            final habits = habitProvider.habits;
+                // Notification Settings (only show if enabled)
+                if (settingsProvider.notificationsEnabled) ...[
+                  const Divider(),
 
-            if (_notificationsEnabled) {
-              for (final habit in habits) {
-                if (habit.hasReminder && habit.reminderTime != null) {
-                  await NotificationService().scheduleSpecificHabitReminder(
-                    habit,
-                    habit.reminderTime!, // Make sure it's not null
-                  );
-                }
-              }
-            } else {
-              await NotificationService().cancelAllNotifications();
-            }
-          },
-        ),
-      ],
+                  // Reminder Time
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.schedule),
+                    title: const Text('Reminder Time'),
+                    subtitle: Text(
+                      settingsProvider.reminderTime.format(context),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _selectReminderTime(context, settingsProvider),
+                  ),
+
+                  // Sound Settings
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Sound'),
+                      Switch(
+                        value: settingsProvider.soundEnabled,
+                        onChanged: (value) => settingsProvider.toggleSound(),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Vibration Settings
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Vibration'),
+                      Switch(
+                        value: settingsProvider.vibrationEnabled,
+                        onChanged:
+                            (value) => settingsProvider.toggleVibration(),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  Future<void> _selectReminderTime(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+  ) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: settingsProvider.reminderTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != settingsProvider.reminderTime) {
+      await settingsProvider.updateReminderTime(picked);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reminder time updated to ${picked.format(context)}'),
+          ),
+        );
+      }
+    }
   }
 }
