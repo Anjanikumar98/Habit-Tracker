@@ -88,21 +88,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return RefreshIndicator(
           onRefresh: () => habitProvider.loadHabits(),
-          child: Column(
-            children: [
-              const ProgressSummary(),
-              const QuickAddHabit(),
-              Expanded(
-                child: ListView.builder(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const ProgressSummary(),
+                const QuickAddHabit(),
+                ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: habitProvider.habits.length,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     final habit = habitProvider.habits[index];
                     return HabitCard(habit: habit);
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

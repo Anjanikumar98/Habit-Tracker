@@ -23,33 +23,36 @@ class _ProgressChartState extends State<ProgressChart> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Progress Chart',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                SegmentedButton<int>(
-                  segments:
-                      _periods
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => ButtonSegment<int>(
-                              value: entry.key,
-                              label: Text(entry.value),
-                            ),
-                          )
-                          .toList(),
-                  selected: {_selectedPeriod},
-                  onSelectionChanged: (Set<int> newSelection) {
-                    setState(() {
-                      _selectedPeriod = newSelection.first;
-                    });
-                  },
-                ),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Progress Chart',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  SegmentedButton<int>(
+                    segments:
+                        _periods
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => ButtonSegment<int>(
+                                value: entry.key,
+                                label: Text(entry.value),
+                              ),
+                            )
+                            .toList(),
+                    selected: {_selectedPeriod},
+                    onSelectionChanged: (Set<int> newSelection) {
+                      setState(() {
+                        _selectedPeriod = newSelection.first;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             SizedBox(height: 300, child: _buildChart()),
@@ -484,5 +487,4 @@ class _ProgressChartState extends State<ProgressChart> {
     }
   }
 }
-
 

@@ -10,7 +10,7 @@ class ThemeProvider with ChangeNotifier {
     _loadThemePreference();
   }
 
-  void toggleTheme() {
+  void toggleTheme(bool value) {
     _isDarkMode = !_isDarkMode;
     _saveThemePreference(_isDarkMode);
     notifyListeners();

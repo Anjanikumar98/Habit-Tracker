@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
+import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
+import 'package:habit_tracker/screens/setting/widgets/theme_selector.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -11,14 +14,14 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // _buildSectionHeader(context, 'Appearance'),
-          // const ThemeSelector(),
-          // const SizedBox(height: 24),
-          //
-          // _buildSectionHeader(context, 'Notifications'),
-          // const NotificationSettings(),
-          // const SizedBox(height: 24),
-          //
+          _buildSectionHeader(context, 'Appearance'),
+          const ThemeSelector(),
+          const SizedBox(height: 24),
+
+          _buildSectionHeader(context, 'Notifications'),
+          const NotificationSettings(),
+          const SizedBox(height: 24),
+
           // _buildSectionHeader(context, 'Data'),
           // const BackupRestore(),
           // const SizedBox(height: 24),

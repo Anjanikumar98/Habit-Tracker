@@ -12,11 +12,7 @@ class ProgressSummary extends StatelessWidget {
       builder: (context, habitProvider, child) {
         final habits = habitProvider.habits;
         final completedToday =
-            habits
-                .where(
-                  (h) => habitProvider.isHabitCompletedToday(h.id as Habit),
-                )
-                .length;
+            habits.where((h) => habitProvider.isHabitCompletedToday(h)).length;
         final totalHabits = habits.length;
         final progress = totalHabits > 0 ? completedToday / totalHabits : 0.0;
 
@@ -53,7 +49,7 @@ class ProgressSummary extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
-                // value: progress,
+                value: progress,
                 backgroundColor: Colors.white.withOpacity(0.3),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 6,

@@ -15,8 +15,8 @@ class HabitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
-        final isCompleted = habitProvider.isHabitCompletedToday(habit.id as Habit);
-        final completionRate = habitProvider.getCompletionRate(habit.id as Habit);
+        final isCompleted = habitProvider.isHabitCompletedToday(habit);
+        final completionRate = habitProvider.isHabitCompletedToday(habit);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -40,10 +40,7 @@ class HabitCard extends StatelessWidget {
                         width: 4,
                         height: 40,
                         decoration: BoxDecoration(
-                          // color: Color(
-                          //   int.parse(habit.color.substring(1), radix: 16) +
-                          //       0xFF000000,
-                          // ),
+                          color: habit.color,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -95,7 +92,7 @@ class HabitCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${(completionRate * 100).toInt()}% complete',
+                            '${((isCompleted ? 1 : 0) * 100)}% complete',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -118,5 +115,4 @@ class HabitCard extends StatelessWidget {
     );
   }
 }
-
 

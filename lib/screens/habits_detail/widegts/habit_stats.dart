@@ -12,15 +12,13 @@ class HabitStats extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
-        final completionRate = habitProvider.getCompletionRate(habit.id as Habit);
+        final completionRate = habitProvider.getCompletionRate(habit);
 
         return Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            // color: Color(
-            //   int.parse(habit.color.substring(1), radix: 16) + 0xFF000000,
-            // ),
+            color: habit.color,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
