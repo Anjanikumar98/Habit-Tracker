@@ -14,6 +14,8 @@ class HabitProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clampedProgress = progress.clamp(0.0, 1.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -22,23 +24,28 @@ class HabitProgressIndicator extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
             ),
             Text(
-              '${(progress * 100).toInt()}%',
-              style: TextStyle(
+              '${(clampedProgress * 100).toInt()}%',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[400],
-                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: Colors.grey[800],
-          valueColor: AlwaysStoppedAnimation(color),
+        Semantics(
+          label: '$label progress',
+          value: '${(clampedProgress * 100).toInt()}%',
+          child: LinearProgressIndicator(
+            value: clampedProgress,
+            backgroundColor: Colors.grey[800],
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
         ),
       ],
     );
