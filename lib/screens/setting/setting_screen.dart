@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
+import 'package:habit_tracker/screens/authentication_screen/feedback_screen.dart';
 import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
@@ -487,6 +488,10 @@ class SettingsScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                   // TODO: Implement app store rating
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Thank you for your feedback!'),
@@ -500,3 +505,4 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+

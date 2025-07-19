@@ -1,26 +1,78 @@
 class Validators {
-  // Common regex patterns
   static final RegExp _emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
 
-  static final RegExp _phoneRegExp = RegExp(r'^\+?[\d\s\-()]+$');
-
   static final RegExp _nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
+
+  // Static methods that match your usage in the UI
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+
+    if (!_emailRegExp.hasMatch(value.trim())) {
+      return 'Please enter a valid email address';
+    }
+
+    return null;
+  }
+
+  static String? password(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+
+    // Check for at least one letter and one number
+    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+      return 'Password must contain at least one letter';
+    }
+
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'Password must contain at least one number';
+    }
+
+    return null;
+  }
+
+  static String? name(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Name is required';
+    }
+
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters';
+    }
+
+    if (value.trim().length > 50) {
+      return 'Name must be less than 50 characters';
+    }
+
+    if (!_nameRegExp.hasMatch(value.trim())) {
+      return 'Name can only contain letters and spaces';
+    }
+
+    return null;
+  }
+
+  static String? required(String? value, [String? fieldName]) {
+    if (value == null || value.trim().isEmpty) {
+      return '${fieldName ?? 'This field'} is required';
+    }
+    return null;
+  }
+
+  static final RegExp _phoneRegExp = RegExp(r'^\+?[\d\s\-()]+$');
 
   static final RegExp _alphanumericRegExp = RegExp(r'^[a-zA-Z0-9]+$');
 
   static final RegExp _urlRegExp = RegExp(
     r'^https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
   );
-
-  /// Validates if a string is not null and not empty
-  static String? required(String? value, {String? fieldName}) {
-    if (value == null || value.trim().isEmpty) {
-      return '${fieldName ?? 'This field'} is required';
-    }
-    return null;
-  }
 
   /// Validates habit name
   static String? validateHabitName(String? value) {
@@ -49,12 +101,13 @@ class Validators {
 
   /// Validates email format
   static String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    if (value == null || value.isEmpty) {
       return 'Email is required';
     }
 
-    if (!_emailRegExp.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
+    final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Enter a valid email';
     }
 
     return null;

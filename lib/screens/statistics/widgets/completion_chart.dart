@@ -7,10 +7,22 @@ class CompletionChart extends StatelessWidget {
   const CompletionChart({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         return Card(
+          color:
+              Theme.of(context)
+                  .colorScheme
+                  .surface, // Optional: Ensures proper light/dark support
+          elevation:
+              2, // Optional: If you want a consistent feel with AppTheme.cardTheme
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              12,
+            ), // Match AppTheme card shape
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -18,7 +30,10 @@ class CompletionChart extends StatelessWidget {
               children: [
                 Text(
                   'Weekly Completion Trends',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -86,12 +101,13 @@ class CompletionChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  '${value.toInt()}%',
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
-              },
+              getTitlesWidget:
+                  (value, meta) => Text(
+                    '${value.toInt()}%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -100,13 +116,14 @@ class CompletionChart extends StatelessWidget {
               reservedSize: 30,
               getTitlesWidget: (value, meta) {
                 final weekLabels = ['W1', 'W2', 'W3', 'W4'];
-                if (value.toInt() < weekLabels.length) {
-                  return Text(
-                    weekLabels[value.toInt()],
-                    style: Theme.of(context).textTheme.bodySmall,
-                  );
-                }
-                return const Text('');
+                return Text(
+                  value.toInt() < weekLabels.length
+                      ? weekLabels[value.toInt()]
+                      : '',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                );
               },
             ),
           ),
@@ -120,26 +137,22 @@ class CompletionChart extends StatelessWidget {
           ),
         ),
         barGroups:
-            chartData
-                .asMap()
-                .entries
-                .map(
-                  (entry) => BarChartGroupData(
-                    x: entry.key,
-                    barRods: [
-                      BarChartRodData(
-                        toY: entry.value,
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 20,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
-                        ),
-                      ),
-                    ],
+            chartData.asMap().entries.map((entry) {
+              return BarChartGroupData(
+                x: entry.key,
+                barRods: [
+                  BarChartRodData(
+                    toY: entry.value,
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 20,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
                   ),
-                )
-                .toList(),
+                ],
+              );
+            }).toList(),
       ),
     );
   }
@@ -149,35 +162,46 @@ class CompletionChart extends StatelessWidget {
     final weeklyData = <double>[];
 
     for (int week = 0; week < 4; week++) {
-      final weekStart = now.subtract(
-        Duration(days: now.weekday - 1 + (week * 7)),
-      );
+      // Start of the week (Monday)
+      final weekStart = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: now.weekday - 1 + (week * 7)));
+
+      // End of the week (Sunday)
+      final weekEnd = weekStart.add(const Duration(days: 6));
+
       int totalCompletions = 0;
       int totalPossible = 0;
 
       for (final habit in habitProvider.habits) {
-        for (int day = 0; day < 7; day++) {
-          final date = weekStart.add(Duration(days: day));
-          if (date.isBefore(now.add(const Duration(days: 1)))) {
-            totalPossible++;
-            if (habit.completedDates.any(
-              (completedDate) =>
-                  completedDate.year == date.year &&
-                  completedDate.month == date.month &&
-                  completedDate.day == date.day,
-            )) {
-              totalCompletions++;
-            }
-          }
+        for (int i = 0; i < 7; i++) {
+          final date = weekStart.add(Duration(days: i));
+
+          // Skip future dates (only count until today)
+          if (date.isAfter(now)) continue;
+
+          totalPossible++;
+
+          final completed = habit.completedDates.any(
+            (completedDate) =>
+                completedDate.year == date.year &&
+                completedDate.month == date.month &&
+                completedDate.day == date.day,
+          );
+
+          if (completed) totalCompletions++;
         }
       }
 
       final completionRate =
           totalPossible > 0 ? (totalCompletions / totalPossible) * 100 : 0.0;
+
       weeklyData.add(completionRate);
     }
 
-    return weeklyData.reversed.toList();
+    return weeklyData.reversed.toList(); // Oldest week first
   }
 
   Widget _buildChartLegend(BuildContext context) {
