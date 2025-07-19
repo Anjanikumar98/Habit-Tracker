@@ -125,6 +125,25 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
                   }
                   return null;
                 },
+
+                selectedBuilder: (context, date, _) {
+                  return Container(
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${date.day}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
 
               onDaySelected: (selectedDay, focusedDay) {
@@ -158,23 +177,24 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
   }
 
   Widget _buildLegend() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildLegendItem(
-          color: Theme.of(context).colorScheme.primary,
-          label: 'Completed',
-        ),
-        _buildLegendItem(
-          color: Theme.of(context).colorScheme.tertiary,
-          label: 'Today',
-        ),
-        _buildLegendItem(color: Colors.grey, label: 'Missed'),
-      ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildLegendItem(color: colorScheme.primary, label: 'Completed'),
+          _buildLegendItem(color: colorScheme.tertiary, label: 'Today'),
+          _buildLegendItem(color: Colors.grey, label: 'Missed'),
+        ],
+      ),
     );
   }
 
   Widget _buildLegendItem({required Color color, required String label}) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -183,13 +203,22 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
           height: 12,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildMonthStats() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     final currentMonth = _focusedDay.month;
     final currentYear = _focusedDay.year;
 
@@ -207,8 +236,8 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
+        color: colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -234,18 +263,25 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
   }
 
   Widget _buildStatColumn(String label, String value, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        Icon(icon, size: 20, color: colorScheme.primary),
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          label,
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:habit_tracker/models/habit.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/habit_provider.dart';
 

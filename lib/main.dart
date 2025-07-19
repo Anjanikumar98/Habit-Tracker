@@ -103,18 +103,22 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF6C5CE7),
+      backgroundColor: colorScheme.primary, // Use theme primary color
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Icon container
             Container(
               width: 120,
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.2),
+                color: colorScheme.surface.withOpacity(0.2),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),
@@ -123,40 +127,45 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.psychology,
                 size: 64,
-                color: Colors.white,
+                color: colorScheme.onPrimary,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+
+            // App Title
+            Text(
               'HabitFlow',
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: colorScheme.onPrimary,
                 letterSpacing: 1.2,
               ),
             ),
             const SizedBox(height: 8),
+
+            // Subtitle
             Text(
               'Building Better Habits',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
+                color: colorScheme.onPrimary.withOpacity(0.8),
                 fontWeight: FontWeight.w300,
               ),
             ),
             const SizedBox(height: 40),
-            // Loading indicator
+
+            // Loading Indicator
             SizedBox(
               width: 40,
               height: 40,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  Colors.white.withOpacity(0.8),
+                  colorScheme.onPrimary.withOpacity(0.8),
                 ),
               ),
             ),

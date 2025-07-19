@@ -21,6 +21,7 @@ class HabitDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
+            tooltip: 'Edit Habit',
             onPressed:
                 () => Navigator.push(
                   context,
@@ -35,16 +36,24 @@ class HabitDetailScreen extends StatelessWidget {
             },
             itemBuilder:
                 (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
-                    child: Text('Delete Habit'),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.delete_outline, color: Colors.redAccent),
+                        SizedBox(width: 8),
+                        Text('Delete Habit'),
+                      ],
+                    ),
                   ),
                 ],
           ),
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             HabitStats(habit: habit),
             const SizedBox(height: 16),
@@ -62,22 +71,34 @@ class HabitDetailScreen extends StatelessWidget {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete Habit'),
-            content: const Text(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            title: Text(
+              'Delete Habit',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            content: Text(
               'Are you sure you want to delete this habit? This action cannot be undone.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                ),
                 child: const Text('Cancel'),
               ),
-              TextButton(
+              TextButton.icon(
                 onPressed: () {
                   context.read<HabitProvider>().deleteHabit(habit.id);
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },
-                child: const Text('Delete'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Delete'),
               ),
             ],
           ),

@@ -13,45 +13,49 @@ class HabitStats extends StatelessWidget {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         final completionRate = habitProvider.getCompletionRate(habit);
+        final onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
 
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: habit.color,
+        return Card(
+          color: habit.color,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Habit Statistics',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatItem('Current Streak', '${habit.currentStreak}'),
-                  _buildStatItem('Longest Streak', '${habit.longestStreak}'),
-                  _buildStatItem(
-                    'Total Completions',
-                    '${habit.totalCompletions}',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: Text(
-                  'Completion Rate: ${completionRate.toStringAsFixed(1)}%',
+          margin: const EdgeInsets.all(16),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Habit Statistics',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.white),
+                  ).textTheme.titleLarge?.copyWith(color: onPrimaryColor),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem('Current Streak', '${habit.currentStreak}'),
+                    _buildStatItem('Longest Streak', '${habit.longestStreak}'),
+                    _buildStatItem(
+                      'Total Completions',
+                      '${habit.totalCompletions}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: Text(
+                    'Completion Rate: ${completionRate.toStringAsFixed(1)}%',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: onPrimaryColor),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -60,6 +64,8 @@ class HabitStats extends StatelessWidget {
 
   Widget _buildStatItem(String title, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           value,
@@ -70,8 +76,13 @@ class HabitStats extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(color: Colors.white70)),
+        Text(
+          title,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
 }
+

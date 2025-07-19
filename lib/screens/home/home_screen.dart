@@ -41,11 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed:
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddHabitScreen()),
-                  ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -116,3 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
+

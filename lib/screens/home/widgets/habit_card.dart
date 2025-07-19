@@ -16,10 +16,13 @@ class HabitCard extends StatelessWidget {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         final isCompleted = habitProvider.isHabitCompletedToday(habit);
-        final completionRate = habitProvider.isHabitCompletedToday(habit);
+        final completionRate = isCompleted ? 1.0 : 0.0;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: InkWell(
             onTap:
                 () => Navigator.push(
@@ -51,17 +54,16 @@ class HabitCard extends StatelessWidget {
                           children: [
                             Text(
                               habit.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             if (habit.description.isNotEmpty)
                               Text(
                                 habit.description,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -76,7 +78,9 @@ class HabitCard extends StatelessWidget {
                             habitProvider.completeHabit(habit.id);
                           }
                         },
-                        color: Colors.white24,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.1),
                       ),
                     ],
                   ),
@@ -92,17 +96,20 @@ class HabitCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${((isCompleted ? 1 : 0) * 100)}% complete',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                            '${(completionRate * 100).toInt()}% complete',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.outline,
                             ),
                           ),
                         ],
                       ),
                       Text(
                         habit.frequency,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                     ],
                   ),
@@ -115,4 +122,5 @@ class HabitCard extends StatelessWidget {
     );
   }
 }
+
 

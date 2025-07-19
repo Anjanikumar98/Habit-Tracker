@@ -18,6 +18,9 @@ class _ProgressChartState extends State<ProgressChart> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -26,12 +29,12 @@ class _ProgressChartState extends State<ProgressChart> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Progress Chart',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(width: 16),
                   SegmentedButton<int>(
                     segments:
                         _periods
@@ -55,9 +58,16 @@ class _ProgressChartState extends State<ProgressChart> {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(height: 300, child: _buildChart()),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: SizedBox(
+                key: ValueKey(_selectedPeriod),
+                height: 300,
+                child: _buildChart(),
+              ),
+            ),
             const SizedBox(height: 16),
-            _buildChartLegend(),
+            _buildChartLegend(context),
           ],
         ),
       ),
@@ -80,18 +90,20 @@ class _ProgressChartState extends State<ProgressChart> {
   Widget _buildWeekChart() {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekData = <FlSpot>[];
+    final completedDates = widget.habit.completedDates;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme.bodySmall;
 
-    for (int i = 0; i < 7; i++) {
+    final weekData = List.generate(7, (i) {
       final day = weekStart.add(Duration(days: i));
-      final isCompleted = widget.habit.completedDates.any(
+      final isCompleted = completedDates.any(
         (date) =>
             date.year == day.year &&
             date.month == day.month &&
             date.day == day.day,
       );
-      weekData.add(FlSpot(i.toDouble(), isCompleted ? 1.0 : 0.0));
-    }
+      return FlSpot(i.toDouble(), isCompleted ? 1.0 : 0.0);
+    });
 
     return LineChart(
       LineChartData(
@@ -101,13 +113,13 @@ class _ProgressChartState extends State<ProgressChart> {
           horizontalInterval: 0.5,
           verticalInterval: 1,
           getDrawingHorizontalLine:
-              (value) => FlLine(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              (_) => FlLine(
+                color: colorScheme.outline.withOpacity(0.2),
                 strokeWidth: 1,
               ),
           getDrawingVerticalLine:
-              (value) => FlLine(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              (_) => FlLine(
+                color: colorScheme.outline.withOpacity(0.2),
                 strokeWidth: 1,
               ),
         ),
@@ -116,24 +128,18 @@ class _ProgressChartState extends State<ProgressChart> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value == 0 ? 'Miss' : 'Done',
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
-              },
+              getTitlesWidget:
+                  (value, _) =>
+                      Text(value == 0 ? 'Miss' : 'Done', style: textStyle),
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 30,
-              getTitlesWidget: (value, meta) {
+              getTitlesWidget: (value, _) {
                 final dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                return Text(
-                  dayNames[value.toInt()],
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
+                return Text(dayNames[value.toInt()], style: textStyle);
               },
             ),
           ),
@@ -142,9 +148,7 @@ class _ProgressChartState extends State<ProgressChart> {
         ),
         borderData: FlBorderData(
           show: true,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
         ),
         minX: 0,
         maxX: 6,
@@ -154,26 +158,23 @@ class _ProgressChartState extends State<ProgressChart> {
           LineChartBarData(
             spots: weekData,
             isCurved: false,
-            color: Theme.of(context).colorScheme.primary,
+            color: colorScheme.primary,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) {
-                return FlDotCirclePainter(
-                  radius: 6,
-                  color:
-                      spot.y == 1.0
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
-                  strokeWidth: 2,
-                  strokeColor: Colors.white,
-                );
-              },
+              getDotPainter:
+                  (spot, _, __, ___) => FlDotCirclePainter(
+                    radius: 6,
+                    color:
+                        spot.y == 1.0 ? colorScheme.primary : colorScheme.error,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white,
+                  ),
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: colorScheme.primary.withOpacity(0.1),
             ),
           ),
         ],
@@ -417,56 +418,52 @@ class _ProgressChartState extends State<ProgressChart> {
     );
   }
 
-  Widget _buildChartLegend() {
+  Widget _buildChartLegend(BuildContext context) {
+    final theme = Theme.of(context);
+
+    Widget _buildLegendDot(Color color, String label) {
+      return Row(
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: theme.textTheme.bodySmall),
+        ],
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Legend',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text('Completed', style: Theme.of(context).textTheme.bodySmall),
+              _buildLegendDot(theme.colorScheme.primary, 'Completed'),
               const SizedBox(width: 24),
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text('Missed', style: Theme.of(context).textTheme.bodySmall),
+              _buildLegendDot(theme.colorScheme.error, 'Missed'),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             _getPeriodDescription(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
             ),
           ),
         ],
@@ -487,4 +484,3 @@ class _ProgressChartState extends State<ProgressChart> {
     }
   }
 }
-
