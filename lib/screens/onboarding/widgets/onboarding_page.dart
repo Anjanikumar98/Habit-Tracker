@@ -27,8 +27,8 @@ class _OnboardingPageState extends State<OnboardingPage>
   late Animation<double> _rotationAnimation;
   late Animation<double> _floatingAnimation;
 
-  List<AnimationController> _iconControllers = [];
-  List<Animation<double>> _iconAnimations = [];
+  final List<AnimationController> _iconControllers = [];
+  final List<Animation<double>> _iconAnimations = [];
 
   @override
   void initState() {

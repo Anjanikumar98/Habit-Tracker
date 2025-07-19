@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../home/home_screen.dart';
 import 'widgets/onboarding_page.dart';
 
@@ -183,29 +184,49 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _completeOnboarding();
   }
 
-  void _completeOnboarding() {
-    // Add haptic feedback
-    HapticFeedback.lightImpact();
+  void _completeOnboarding() async {
+    try {
+      // Save that onboarding is completed
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isFirstTime', false);
 
-    // Navigate to home screen
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder:
-            (context, animation, secondaryAnimation) => const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: animation.drive(
-              Tween(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeInOut)),
-            ),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
+      // Add haptic feedback
+      HapticFeedback.lightImpact();
+
+      // Navigate to home screen
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) => const HomeScreen(),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return SlideTransition(
+                position: animation.drive(
+                  Tween(
+                    begin: const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).chain(CurveTween(curve: Curves.easeInOut)),
+                ),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
+      }
+    } catch (e) {
+      // If there's an error saving preferences, still navigate to home
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    }
   }
 
   @override

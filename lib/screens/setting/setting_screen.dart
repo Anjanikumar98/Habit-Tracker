@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
+import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
 import 'package:habit_tracker/screens/setting/widgets/theme_selector.dart';
@@ -138,21 +139,43 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('1.0.0'),
             onTap: () => _showVersionDialog(context),
           ),
+
           const Divider(height: 1),
+
           ListTile(
             leading: const Icon(Icons.help_outline),
             title: const Text('Help & Support'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => _showHelpDialog(context),
           ),
+
           const Divider(height: 1),
+
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Privacy Policy'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => _showPrivacyDialog(context),
           ),
+
           const Divider(height: 1),
+
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: const Text('Show Onboarding'),
+            subtitle: const Text('Replay the app introduction'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const OnboardingScreen(),
+                ),
+              );
+            },
+          ),
+
+          const Divider(height: 1),
+
           ListTile(
             leading: const Icon(Icons.rate_review_outlined),
             title: const Text('Rate App'),
