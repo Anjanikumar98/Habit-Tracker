@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/providers/habit_provider.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
+import 'package:habit_tracker/providers/auth_provider.dart'; // Add this import
 import 'package:habit_tracker/screens/home/home_screen.dart';
 import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
+import 'package:habit_tracker/screens/authentication_screen/login_screen.dart'; // Add this import
 import 'package:habit_tracker/services/notification_service.dart';
 import 'package:habit_tracker/utlis/theme.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HabitProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ), // Add AuthProvider
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
@@ -56,17 +61,22 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer> {
   bool _isLoading = true;
   bool _isFirstTime = true;
+  bool _isAuthenticated = false;
 
   @override
   void initState() {
     super.initState();
-    _checkFirstTime();
+    _initializeApp();
   }
 
-  Future<void> _checkFirstTime() async {
+  Future<void> _initializeApp() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+      // Check if user is already authenticated
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final isAuthenticated = await authProvider.checkAuthStatus();
 
       // Add a small delay for splash effect
       await Future.delayed(const Duration(milliseconds: 1500));
@@ -74,14 +84,16 @@ class _AppInitializerState extends State<AppInitializer> {
       if (mounted) {
         setState(() {
           _isFirstTime = isFirstTime;
+          _isAuthenticated = isAuthenticated;
           _isLoading = false;
         });
       }
     } catch (e) {
-      // If there's an error, default to showing home screen
+      // If there's an error, default to showing onboarding/login
       if (mounted) {
         setState(() {
-          _isFirstTime = false;
+          _isFirstTime = true;
+          _isAuthenticated = false;
           _isLoading = false;
         });
       }
@@ -94,7 +106,17 @@ class _AppInitializerState extends State<AppInitializer> {
       return const SplashScreen();
     }
 
-    return _isFirstTime ? const OnboardingScreen() : const HomeScreen();
+    // Navigation logic:
+    // 1. If first time -> Onboarding
+    // 2. If not authenticated -> Login
+    // 3. If authenticated -> Home
+    if (_isFirstTime) {
+      return const OnboardingScreen();
+    } else if (!_isAuthenticated) {
+      return const LoginScreen();
+    } else {
+      return const HomeScreen();
+    }
   }
 }
 
@@ -133,6 +155,7 @@ class SplashScreen extends StatelessWidget {
                 color: colorScheme.onPrimary,
               ),
             ),
+
             const SizedBox(height: 24),
 
             // App Title
@@ -145,6 +168,7 @@ class SplashScreen extends StatelessWidget {
                 letterSpacing: 1.2,
               ),
             ),
+
             const SizedBox(height: 8),
 
             // Subtitle

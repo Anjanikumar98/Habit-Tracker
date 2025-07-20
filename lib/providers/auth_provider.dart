@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:habit_tracker/models/users.dart';
 import 'package:habit_tracker/services/auth_services.dart';
@@ -12,11 +11,17 @@ class AuthProvider with ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   bool _isInitialized = false;
+  bool _isAuthenticated = false;
+  String? _userEmail;
+  String? _userName;
 
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _currentUser != null;
   bool get isInitialized => _isInitialized;
+  bool get isAuthenticated => _isAuthenticated;
+  String? get userEmail => _userEmail;
+  String? get userName => _userName;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -69,6 +74,20 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Check if user is already authenticated (from SharedPreferences)
+  Future<bool> checkAuthStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
+      _userEmail = prefs.getString('userEmail');
+      _userName = prefs.getString('userName');
+      notifyListeners();
+      return _isAuthenticated;
+    } catch (e) {
+      return false;
     }
   }
 

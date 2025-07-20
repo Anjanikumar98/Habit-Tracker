@@ -5,6 +5,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final bool showBackButton;
+  final PreferredSizeWidget? bottom;
 
   const CustomAppBar({
     Key? key,
@@ -12,18 +13,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.showBackButton = false,
+    this.bottom,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(title),
-      leading: showBackButton ? BackButton() : leading,
+      leading: showBackButton ? const BackButton() : leading,
       actions: actions,
       centerTitle: false,
+      bottom: bottom,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize {
+    final bottomHeight = bottom?.preferredSize.height ?? 0.0;
+    return Size.fromHeight(kToolbarHeight + bottomHeight);
+  }
 }

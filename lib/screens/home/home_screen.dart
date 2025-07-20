@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/models/motivational_card/motivation_card.dart';
+import 'package:habit_tracker/providers/auth_provider.dart';
+import 'package:habit_tracker/screens/authentication_screen/login_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/habit_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -117,6 +119,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
 

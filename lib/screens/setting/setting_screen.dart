@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/providers/auth_provider.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
 import 'package:habit_tracker/screens/authentication_screen/feedback_screen.dart';
+import 'package:habit_tracker/screens/authentication_screen/login_screen.dart';
 import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
@@ -35,15 +37,28 @@ class SettingsScreen extends StatelessWidget {
             _buildLanguageSection(context),
             const SizedBox(height: 24),
 
-            _buildSectionHeader(context, 'Data'),
-            const BackupRestore(),
-            const SizedBox(height: 24),
+            // _buildSectionHeader(context, 'Data'),
+            // const BackupRestore(),
+            // const SizedBox(height: 24),
 
             _buildSectionHeader(context, 'About'),
             _buildAboutSection(context),
             const SizedBox(height: 24),
 
             _buildResetSection(context),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader(context, 'Account'),
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Sign Out'),
+                  subtitle: Text(authProvider.userEmail ?? ''),
+                  onTap: () => _showSignOutDialog(context),
+                );
+              },
+            ),
             const SizedBox(height: 24),
           ],
         ),
@@ -361,6 +376,40 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
+  void _showSignOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Sign Out'),
+            content: const Text('Are you sure you want to sign out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  final authProvider = Provider.of<AuthProvider>(
+                    context,
+                    listen: false,
+                  );
+                  await authProvider.signOut();
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                child: const Text('Sign Out'),
+              ),
+            ],
+          ),
+    );
+  }
+
   // Keep your existing dialog methods...
   void _showVersionDialog(BuildContext context) {
     showDialog(
@@ -487,16 +536,20 @@ class SettingsScreen extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // TODO: Implement app store rating
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FeedbackScreen()),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Thank you for your feedback!'),
-                    ),
-                  );
+
+                  // Schedule the navigation & snackbar after the current frame
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Thank you for your feedback!'),
+                      ),
+                    );
+                  });
                 },
                 child: const Text('Rate Now'),
               ),
@@ -505,4 +558,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-
