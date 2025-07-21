@@ -14,6 +14,9 @@ class HabitProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final clampedProgress = progress.clamp(0.0, 1.0);
 
     return Column(
@@ -24,14 +27,14 @@ class HabitProgressIndicator extends StatelessWidget {
           children: [
             Text(
               label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
             Text(
               '${(clampedProgress * 100).toInt()}%',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[400],
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.6),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -43,7 +46,7 @@ class HabitProgressIndicator extends StatelessWidget {
           value: '${(clampedProgress * 100).toInt()}%',
           child: LinearProgressIndicator(
             value: clampedProgress,
-            backgroundColor: Colors.grey[800],
+            backgroundColor: colorScheme.surfaceVariant,
             valueColor: AlwaysStoppedAnimation(color),
           ),
         ),

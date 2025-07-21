@@ -11,7 +11,8 @@ class StreakBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (streak == 0) return const SizedBox.shrink();
 
-    final badgeColor = isActive ? Colors.orange : Colors.grey;
+    final theme = Theme.of(context);
+    final badgeColor = isActive ? Colors.orange : Colors.grey[300];
     final iconColor = isActive ? Colors.white : Colors.black54;
     final textColor = isActive ? Colors.white : Colors.black87;
 
@@ -26,13 +27,17 @@ class StreakBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.local_fire_department, color: iconColor, size: 12),
+            Icon(
+              Icons.local_fire_department,
+              color: iconColor,
+              size: 14,
+              semanticLabel: 'Flame icon for streak',
+            ),
             const SizedBox(width: 4),
             Text(
               '$streak',
-              style: TextStyle(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: textColor,
-                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -7,21 +7,18 @@ class CompletionChart extends StatelessWidget {
   const CompletionChart({super.key});
 
   @override
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         return Card(
-          color:
-              Theme.of(context)
-                  .colorScheme
-                  .surface, // Optional: Ensures proper light/dark support
-          elevation:
-              2, // Optional: If you want a consistent feel with AppTheme.cardTheme
+          color: colorScheme.surface,
+          elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              12,
-            ), // Match AppTheme card shape
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -30,9 +27,9 @@ class CompletionChart extends StatelessWidget {
               children: [
                 Text(
                   'Weekly Completion Trends',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -78,6 +75,9 @@ class CompletionChart extends StatelessWidget {
       );
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
@@ -88,8 +88,8 @@ class CompletionChart extends StatelessWidget {
               return BarTooltipItem(
                 '${rod.toY.toStringAsFixed(1)}%',
                 TextStyle(
-                  backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-                  color: Theme.of(context).colorScheme.onInverseSurface,
+                  backgroundColor: colorScheme.inverseSurface,
+                  color: colorScheme.onInverseSurface,
                   fontWeight: FontWeight.bold,
                 ),
               );
@@ -104,8 +104,8 @@ class CompletionChart extends StatelessWidget {
               getTitlesWidget:
                   (value, meta) => Text(
                     '${value.toInt()}%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface,
                     ),
                   ),
             ),
@@ -115,13 +115,13 @@ class CompletionChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 30,
               getTitlesWidget: (value, meta) {
-                final weekLabels = ['W1', 'W2', 'W3', 'W4'];
+                const weekLabels = ['W1', 'W2', 'W3', 'W4'];
                 return Text(
                   value.toInt() < weekLabels.length
                       ? weekLabels[value.toInt()]
                       : '',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface,
                   ),
                 );
               },
@@ -132,9 +132,7 @@ class CompletionChart extends StatelessWidget {
         ),
         borderData: FlBorderData(
           show: true,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
         ),
         barGroups:
             chartData.asMap().entries.map((entry) {
@@ -143,7 +141,7 @@ class CompletionChart extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colorScheme.primary,
                     width: 20,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(4),
@@ -162,14 +160,11 @@ class CompletionChart extends StatelessWidget {
     final weeklyData = <double>[];
 
     for (int week = 0; week < 4; week++) {
-      // Start of the week (Monday)
       final weekStart = DateTime(
         now.year,
         now.month,
         now.day,
-      ).subtract(Duration(days: now.weekday - 1 + (week * 7)));
-
-      // End of the week (Sunday)
+      ).subtract(Duration(days: now.weekday - 1 + week * 7));
       final weekEnd = weekStart.add(const Duration(days: 6));
 
       int totalCompletions = 0;
@@ -178,20 +173,18 @@ class CompletionChart extends StatelessWidget {
       for (final habit in habitProvider.habits) {
         for (int i = 0; i < 7; i++) {
           final date = weekStart.add(Duration(days: i));
-
-          // Skip future dates (only count until today)
-          if (date.isAfter(now)) continue;
+          if (date.isAfter(now)) break; // stop loop instead of continue
 
           totalPossible++;
 
-          final completed = habit.completedDates.any(
+          if (habit.completedDates.any(
             (completedDate) =>
                 completedDate.year == date.year &&
                 completedDate.month == date.month &&
                 completedDate.day == date.day,
-          );
-
-          if (completed) totalCompletions++;
+          )) {
+            totalCompletions++;
+          }
         }
       }
 
@@ -201,34 +194,43 @@ class CompletionChart extends StatelessWidget {
       weeklyData.add(completionRate);
     }
 
-    return weeklyData.reversed.toList(); // Oldest week first
+    return weeklyData.reversed.toList();
   }
 
   Widget _buildChartLegend(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           Container(
-            width: 16,
-            height: 16,
+            width: 14,
+            height: 14,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(4),
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(3),
             ),
           ),
           const SizedBox(width: 8),
-          Text('Completion Rate', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Completion Rate',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           const Spacer(),
           Text(
             'Last 4 weeks',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

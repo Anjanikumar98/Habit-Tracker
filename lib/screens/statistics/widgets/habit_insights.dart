@@ -74,6 +74,8 @@ class HabitInsights extends StatelessWidget {
     );
   }
 
+
+
   Widget _buildInsightCard(BuildContext context, Map<String, dynamic> insight) {
     final type = insight['type'] as String;
     final title = insight['title'] as String;
@@ -265,6 +267,7 @@ class HabitInsights extends StatelessWidget {
 
     return totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
   }
+
 
   int _calculateCurrentStreak(Habit habit) {
     final now = DateTime.now();

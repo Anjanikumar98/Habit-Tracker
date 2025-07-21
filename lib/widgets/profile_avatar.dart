@@ -16,6 +16,9 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -26,21 +29,18 @@ class ProfileAvatar extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
+            colors: [colorScheme.primary, colorScheme.secondary],
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: colorScheme.primary.withOpacity(0.3),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
           ],
         ),
         child:
-            imageUrl != null && imageUrl!.isNotEmpty
+            (imageUrl != null && imageUrl!.isNotEmpty)
                 ? ClipRRect(
                   borderRadius: BorderRadius.circular(size / 2),
                   child: Image.network(

@@ -18,24 +18,29 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: Colors.grey[400]),
+          Icon(icon, size: 80, color: colorScheme.onSurface.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.6),
+            ),
             textAlign: TextAlign.center,
           ),
           if (onActionPressed != null) ...[

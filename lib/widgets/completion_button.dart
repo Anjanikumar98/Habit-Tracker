@@ -14,29 +14,33 @@ class CompletionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveColor = color;
+    final Color borderColor = isCompleted ? effectiveColor : Colors.grey.shade500;
+    final Color iconColor = isCompleted ? Colors.white : Colors.grey.shade600;
+
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
       child: InkWell(
-        customBorder: const CircleBorder(),
         onTap: onPressed,
+        customBorder: const CircleBorder(),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          width: 31,
-          height: 31,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: isCompleted ? color : Colors.transparent,
+            color: isCompleted ? effectiveColor : Colors.transparent,
             border: Border.all(
-              color: isCompleted ? color : Colors.grey[600]!,
+              color: borderColor,
               width: 2,
             ),
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.check,
-            color: isCompleted ? Colors.white : Colors.grey[600],
-            size: 18,
+            color: iconColor,
+            size: 20,
           ),
         ),
       ),

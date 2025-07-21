@@ -18,12 +18,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appBarTheme = Theme.of(context).appBarTheme;
+
     return AppBar(
-      title: Text(title),
+      title: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(color: appBarTheme.foregroundColor),
+      ),
       leading: showBackButton ? const BackButton() : leading,
       actions: actions,
-      centerTitle: false,
+      centerTitle: true,
       bottom: bottom,
+      elevation: appBarTheme.elevation ?? 0,
+      backgroundColor: appBarTheme.backgroundColor,
     );
   }
 

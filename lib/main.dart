@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/providers/habit_provider.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
-import 'package:habit_tracker/providers/auth_provider.dart'; // Add this import
+import 'package:habit_tracker/providers/auth_provider.dart';
 import 'package:habit_tracker/screens/home/home_screen.dart';
 import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
-import 'package:habit_tracker/screens/authentication_screen/login_screen.dart'; // Add this import
+import 'package:habit_tracker/screens/authentication_screen/login_screen.dart';
 import 'package:habit_tracker/services/notification_service.dart';
 import 'package:habit_tracker/utlis/theme.dart';
 import 'package:provider/provider.dart';
@@ -29,9 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HabitProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ), // Add AuthProvider
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
@@ -78,7 +76,6 @@ class _AppInitializerState extends State<AppInitializer> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final isAuthenticated = await authProvider.checkAuthStatus();
 
-      // Add a small delay for splash effect
       await Future.delayed(const Duration(milliseconds: 1500));
 
       if (mounted) {
@@ -106,10 +103,6 @@ class _AppInitializerState extends State<AppInitializer> {
       return const SplashScreen();
     }
 
-    // Navigation logic:
-    // 1. If first time -> Onboarding
-    // 2. If not authenticated -> Login
-    // 3. If authenticated -> Home
     if (_isFirstTime) {
       return const OnboardingScreen();
     } else if (!_isAuthenticated) {
@@ -129,7 +122,7 @@ class SplashScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colorScheme.primary, // Use theme primary color
+      backgroundColor: colorScheme.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -180,6 +173,7 @@ class SplashScreen extends StatelessWidget {
                 fontWeight: FontWeight.w300,
               ),
             ),
+
             const SizedBox(height: 40),
 
             // Loading Indicator

@@ -8,6 +8,8 @@ class CategoryBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _analyticsService.getCategoryAnalytics(),
       builder: (context, snapshot) {
@@ -21,10 +23,16 @@ class CategoryBreakdown extends StatelessWidget {
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
-          return const Card(
+          return Card(
+            color: theme.colorScheme.errorContainer,
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Error loading category analytics'),
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Error loading category analytics',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
             ),
           );
         }
@@ -39,11 +47,17 @@ class CategoryBreakdown extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Icon(Icons.category, size: 48, color: Colors.grey[400]),
+                  Icon(
+                    Icons.category,
+                    size: 48,
+                    color: theme.iconTheme.color?.withOpacity(0.4),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No category data available',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -51,14 +65,14 @@ class CategoryBreakdown extends StatelessWidget {
           );
         }
 
-        // Calculate total completions for percentage calculations
+        // Calculate total completions
         final totalCompletions = categoryStats.values
             .map(
               (stats) =>
                   (stats as Map<String, dynamic>)['totalCompletions'] as int? ??
                   0,
             )
-            .fold<int>(0, (sum, completions) => sum + completions);
+            .fold<int>(0, (sum, value) => sum + value);
 
         return Card(
           child: Padding(
@@ -68,14 +82,11 @@ class CategoryBreakdown extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.category,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                    Icon(Icons.category, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Category Performance',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -131,28 +142,31 @@ class CategoryBreakdown extends StatelessWidget {
     double completionRate,
     double percentage,
   ) {
+    final theme = Theme.of(context);
     final color = _getCategoryColor(categoryName);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// Header: Category name and completion badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              /// Category Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       categoryName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: color,
                       ),
@@ -160,13 +174,15 @@ class CategoryBreakdown extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '$habitCount ${habitCount == 1 ? 'habit' : 'habits'}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
+
+              /// Completions Badge
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -178,36 +194,37 @@ class CategoryBreakdown extends StatelessWidget {
                 ),
                 child: Text(
                   '$completions',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 12),
+
+          /// Progress & Share
           Row(
             children: [
+              /// Success Rate
               Expanded(
                 flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Success Rate',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    Text('Success Rate', style: theme.textTheme.bodySmall),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: completionRate,
-                      backgroundColor: Colors.grey[300],
+                      backgroundColor: theme.colorScheme.surfaceVariant,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${(completionRate * 100).toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: color,
                       ),
@@ -215,19 +232,19 @@ class CategoryBreakdown extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(width: 16),
+
+              /// Share of Total
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      'Share of Total',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    Text('Share of Total', style: theme.textTheme.bodySmall),
                     const SizedBox(height: 8),
                     Text(
                       '${percentage.toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: color,
                       ),
@@ -247,6 +264,8 @@ class CategoryBreakdown extends StatelessWidget {
     Map<String, dynamic> categoryStats,
     int totalCompletions,
   ) {
+    final theme = Theme.of(context);
+
     final totalHabits = categoryStats.values
         .map(
           (stats) => (stats as Map<String, dynamic>)['habitCount'] as int? ?? 0,
@@ -264,8 +283,9 @@ class CategoryBreakdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -299,19 +319,26 @@ class CategoryBreakdown extends StatelessWidget {
     String value,
     IconData icon,
   ) {
+    final theme = Theme.of(context);
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 4),
+        Icon(icon, size: 24, color: theme.colorScheme.primary),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
