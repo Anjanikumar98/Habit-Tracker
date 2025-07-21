@@ -35,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return SafeArea(
       child: Scaffold(
         appBar: CustomAppBar(
@@ -43,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
+              tooltip: 'Add Habit',
               onPressed: () {
                 Navigator.push(
                   context,
@@ -63,6 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) => setState(() => _currentIndex = index),
+          backgroundColor: colorScheme.surface,
+          selectedItemColor: colorScheme.primary,
+          unselectedItemColor: colorScheme.onSurfaceVariant,
+          selectedLabelStyle: textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: textTheme.labelMedium,
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
@@ -80,6 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeTab() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         if (habitProvider.habits.isEmpty) {
@@ -93,22 +108,34 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         return RefreshIndicator(
+          color: colorScheme.primary,
+          backgroundColor: colorScheme.surface,
           onRefresh: () => habitProvider.loadHabits(),
           child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const MotivationCard(),
+                const SizedBox(height: 12),
 
                 const ProgressSummary(),
+                const SizedBox(height: 12),
+
                 const QuickAddHabit(),
+                const SizedBox(height: 16),
+
                 ListView.builder(
-                  padding: const EdgeInsets.all(16),
                   itemCount: habitProvider.habits.length,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     final habit = habitProvider.habits[index];
-                    return HabitCard(habit: habit);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: HabitCard(habit: habit),
+                    );
                   },
                 ),
               ],
@@ -119,4 +146,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

@@ -7,6 +7,9 @@ class ProgressSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         final habits = habitProvider.habits;
@@ -29,11 +32,10 @@ class ProgressSummary extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Today\'s Progress',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -49,8 +51,10 @@ class ProgressSummary extends StatelessWidget {
               const SizedBox(height: 16),
               LinearProgressIndicator(
                 value: progress,
-                backgroundColor: Colors.white.withOpacity(0.3),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                backgroundColor: colorScheme.onPrimary.withOpacity(0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  colorScheme.onPrimary,
+                ),
                 minHeight: 6,
               ),
             ],
@@ -61,21 +65,27 @@ class ProgressSummary extends StatelessWidget {
   }
 
   Widget _buildStat(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final color = Theme.of(context).colorScheme.onPrimary;
+
+        return Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(color: color.withOpacity(0.8), fontSize: 12),
+            ),
+          ],
+        );
+      },
     );
   }
 }

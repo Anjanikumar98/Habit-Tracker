@@ -15,6 +15,10 @@ class HabitDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: habit.name,
@@ -39,10 +43,18 @@ class HabitDetailScreen extends StatelessWidget {
                   PopupMenuItem(
                     value: 'delete',
                     child: Row(
-                      children: const [
-                        Icon(Icons.delete_outline, color: Colors.redAccent),
-                        SizedBox(width: 8),
-                        Text('Delete Habit'),
+                      children: [
+                        const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Delete Habit',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.error,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -67,24 +79,40 @@ class HabitDetailScreen extends StatelessWidget {
   }
 
   void _showDeleteDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             title: Text(
               'Delete Habit',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
             content: Text(
               'Are you sure you want to delete this habit? This action cannot be undone.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            actionsPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: colorScheme.primary,
+                  textStyle: textTheme.labelLarge,
                 ),
                 child: const Text('Cancel'),
               ),
@@ -94,11 +122,12 @@ class HabitDetailScreen extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                ),
                 icon: const Icon(Icons.delete_outline),
                 label: const Text('Delete'),
+                style: TextButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  textStyle: textTheme.labelLarge,
+                ),
               ),
             ],
           ),

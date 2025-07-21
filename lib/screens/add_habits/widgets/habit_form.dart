@@ -48,6 +48,9 @@ class _HabitFormState extends State<HabitForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -70,7 +73,7 @@ class _HabitFormState extends State<HabitForm> {
 
             const SizedBox(height: 16),
 
-            // Frequency Selector (custom widget)
+            // Frequency Selector
             FrequencySelector(
               selectedFrequency: _selectedFrequency,
               onFrequencyChanged: (frequency) {
@@ -90,7 +93,7 @@ class _HabitFormState extends State<HabitForm> {
 
             const SizedBox(height: 24),
 
-            // Submit Button (assumes ElevatedButton uses AppTheme style)
+            // Submit Button
             _buildSubmitButton(),
           ],
         ),
@@ -99,13 +102,20 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   Widget _buildNameField() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return TextFormField(
       controller: _nameController,
+      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: 'Habit Name',
+        labelStyle: textTheme.labelLarge?.copyWith(
+          color: colorScheme.onSurface,
+        ),
         hintText: 'Enter habit name',
+        hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.edit, color: colorScheme.primary),
         filled: true,
         fillColor: colorScheme.surfaceVariant,
@@ -121,23 +131,40 @@ class _HabitFormState extends State<HabitForm> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
+        ),
+        counterStyle: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
       ),
-      style: TextStyle(color: colorScheme.onSurface),
-      validator:
-          (value) => value == null || value.isEmpty ? 'Name required' : null,
       maxLength: Constants.maxHabitNameLength,
+      validator:
+          (value) =>
+              value == null || value.trim().isEmpty ? 'Name required' : null,
     );
   }
 
-
   Widget _buildDescriptionField() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return TextFormField(
       controller: _descriptionController,
+      maxLength: Constants.maxDescriptionLength,
+      maxLines: 3,
+      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: 'Description (Optional)',
+        labelStyle: textTheme.labelLarge?.copyWith(
+          color: colorScheme.onSurface,
+        ),
         hintText: 'Add some details...',
+        hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.description, color: colorScheme.primary),
         filled: true,
         fillColor: colorScheme.surfaceVariant,
@@ -153,21 +180,34 @@ class _HabitFormState extends State<HabitForm> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
+        ),
+        counterStyle: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
       ),
-      maxLength: Constants.maxDescriptionLength,
-      maxLines: 3,
-      style: TextStyle(color: colorScheme.onSurface),
     );
   }
 
   Widget _buildCategoryDropdown() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return DropdownButtonFormField<String>(
       value: _selectedCategory,
+      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: 'Category',
+        labelStyle: textTheme.labelLarge?.copyWith(
+          color: colorScheme.onSurface,
+        ),
         hintText: 'Select a category',
+        hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.category, color: colorScheme.primary),
         filled: true,
         fillColor: colorScheme.surfaceVariant,
@@ -183,12 +223,29 @@ class _HabitFormState extends State<HabitForm> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
+        ),
       ),
+      dropdownColor: colorScheme.surface,
+      iconEnabledColor: colorScheme.onSurface,
       items:
           Constants.categories
               .map(
-                (category) =>
-                    DropdownMenuItem(value: category, child: Text(category)),
+                (category) => DropdownMenuItem(
+                  value: category,
+                  child: Text(
+                    category,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
               )
               .toList(),
       onChanged: (value) => setState(() => _selectedCategory = value!),
@@ -197,16 +254,19 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   Widget _buildColorSelector() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Color',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -218,7 +278,9 @@ class _HabitFormState extends State<HabitForm> {
                 return InkWell(
                   borderRadius: BorderRadius.circular(24),
                   onTap: () => setState(() => _selectedColor = color),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
@@ -231,12 +293,22 @@ class _HabitFormState extends State<HabitForm> {
                                 : Colors.transparent,
                         width: 2,
                       ),
+                      boxShadow:
+                          isSelected
+                              ? [
+                                BoxShadow(
+                                  color: colorScheme.primary.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                              : [],
                     ),
                     child:
                         isSelected
-                            ? const Icon(
+                            ? Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 20,
                             )
                             : null,
@@ -256,14 +328,18 @@ class _HabitFormState extends State<HabitForm> {
 
     return Card(
       margin: const EdgeInsets.only(top: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: theme.cardTheme.shape,
       color: colorScheme.surfaceVariant,
+      elevation: theme.cardTheme.elevation,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(Icons.alarm, color: colorScheme.primary),
         title: Text(
           'Reminder Time',
-          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
         ),
         subtitle: Text(
           isSet ? _reminderTime!.format(context) : 'Not set',
@@ -271,11 +347,28 @@ class _HabitFormState extends State<HabitForm> {
             color: isSet ? colorScheme.onSurface : colorScheme.outline,
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: colorScheme.onSurfaceVariant,
+        ),
         onTap: () async {
           final time = await showTimePicker(
             context: context,
             initialTime: _reminderTime ?? TimeOfDay.now(),
+            builder: (context, child) {
+              return Theme(
+                data: theme.copyWith(
+                  colorScheme: theme.colorScheme.copyWith(
+                    primary: theme.colorScheme.primary,
+                    onPrimary: theme.colorScheme.onPrimary,
+                    surface: theme.colorScheme.surface,
+                    onSurface: theme.colorScheme.onSurface,
+                  ),
+                ),
+                child: child!,
+              );
+            },
           );
           if (time != null) {
             setState(() => _reminderTime = time);
@@ -286,13 +379,18 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   Widget _buildSubmitButton() {
+    final theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _submitForm,
+        style: theme.elevatedButtonTheme.style, // Use theme style
         child: Text(
           widget.habit == null ? 'Create Habit' : 'Update Habit',
-          style: const TextStyle(fontSize: 16),
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.onPrimary,
+          ),
         ),
       ),
     );

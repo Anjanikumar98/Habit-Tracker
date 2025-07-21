@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/habit.dart';
@@ -22,6 +24,17 @@ class DatabaseService {
     final path = join(dbPath, 'habit_tracker.db');
 
     return await openDatabase(path, version: 1, onCreate: _createTables);
+  }
+
+  Future<String?> sendFeedback(String email, String message) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/api/feedback'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'message': message}),
+    );
+
+    if (response.statusCode == 201) return null;
+    return jsonDecode(response.body)['error'];
   }
 
   Future<void> _createTables(Database db, int version) async {

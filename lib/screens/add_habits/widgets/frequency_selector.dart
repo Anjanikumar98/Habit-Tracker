@@ -13,12 +13,19 @@ class FrequencySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Frequency',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -26,14 +33,34 @@ class FrequencySelector extends StatelessWidget {
           children:
               Constants.frequencies.map((frequency) {
                 final isSelected = selectedFrequency == frequency;
+
                 return ChoiceChip(
-                  label: Text(frequency),
+                  label: Text(
+                    frequency,
+                    style: textTheme.labelLarge?.copyWith(
+                      color:
+                          isSelected
+                              ? colorScheme.onPrimary
+                              : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) {
                       onFrequencyChanged(frequency);
                     }
                   },
+                  selectedColor: colorScheme.primary,
+                  backgroundColor: colorScheme.surfaceVariant,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color:
+                          isSelected
+                              ? colorScheme.primary
+                              : colorScheme.outlineVariant,
+                    ),
+                  ),
                 );
               }).toList(),
         ),
@@ -41,5 +68,3 @@ class FrequencySelector extends StatelessWidget {
     );
   }
 }
-
-

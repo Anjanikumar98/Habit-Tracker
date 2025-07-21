@@ -141,7 +141,6 @@ class UserFeedback {
 
 enum FeedbackType { bug, feature, improvement, general, compliment }
 
-
 class UserSession {
   final String sessionId;
   final String userId;
@@ -185,4 +184,3 @@ class UserSession {
     );
   }
 }
-
