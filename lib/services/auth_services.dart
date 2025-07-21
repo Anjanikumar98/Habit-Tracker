@@ -19,36 +19,15 @@ class AuthService {
   User? _currentUser;
   User? get currentUser => _currentUser;
 
+  // Backend URL - change this to your actual backend URL
+  final String baseUrl = 'http://localhost:3000/api/auth';
+
   // Initialize service
   Future<void> initialize() async {
     await _loadCurrentUser();
   }
 
-  final String baseUrl = 'http://localhost:3000/api/auth';
-
-  // Future<String?> signUp(String email, String password) async {
-  //   final response = await http.post(
-  //     Uri.parse('$baseUrl/signup'),
-  //     headers: {'Content-Type': 'application/json'},
-  //     body: jsonEncode({'email': email, 'password': password}),
-  //   );
-  //
-  //   if (response.statusCode == 201) return null;
-  //   return jsonDecode(response.body)['error'];
-  // }
-  //
-  // Future<String?> signIn(String email, String password) async {
-  //   final response = await http.post(
-  //     Uri.parse('$baseUrl/login'),
-  //     headers: {'Content-Type': 'application/json'},
-  //     body: jsonEncode({'email': email, 'password': password}),
-  //   );
-  //
-  //   if (response.statusCode == 200) return null;
-  //   return jsonDecode(response.body)['error'];
-  // }
-
-  // Authentication Methods
+  // Authentication Methods with Backend Integration
   Future<AuthResult> signUp({
     required String name,
     required String email,
@@ -61,37 +40,56 @@ class AuthService {
         return AuthResult(success: false, message: validation.message);
       }
 
-      // Check if user already exists
-      final existingUser = await _getUserByEmail(email);
-      if (existingUser != null) {
-        return AuthResult(
-          success: false,
-          message: 'User with this email already exists',
+      // Try backend first
+      try {
+        final backendResponse = await http.post(
+          Uri.parse('$baseUrl/signup'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'name': name.trim(),
+            'email': email.trim().toLowerCase(),
+            'password': password,
+          }),
         );
+
+        if (backendResponse.statusCode == 201) {
+          final responseData = jsonDecode(backendResponse.body);
+
+          // Create user from backend response or create local user
+          final user = User(
+            id: responseData['user']?['id'] ?? _generateUserId(),
+            name: responseData['user']?['name'] ?? name.trim(),
+            email: responseData['user']?['email'] ?? email.trim().toLowerCase(),
+            createdAt:
+                responseData['user']?['createdAt'] != null
+                    ? DateTime.parse(responseData['user']['createdAt'])
+                    : DateTime.now(),
+            lastActiveAt: DateTime.now(),
+            preferences:
+                responseData['user']?['preferences'] ??
+                _getDefaultPreferences(),
+          );
+
+          // Save locally and set as current user
+          await _saveUser(user, password);
+          await _setCurrentUser(user);
+          await _trackUserAction('sign_up', {'method': 'backend'});
+
+          return AuthResult(
+            success: true,
+            user: user,
+            message: 'Account created successfully',
+          );
+        } else {
+          final errorData = jsonDecode(backendResponse.body);
+          // If backend fails, fall back to local storage
+          return await _signUpLocally(name, email, password);
+        }
+      } catch (e) {
+        // Backend connection failed, use local storage
+        print('Backend signup failed: $e, using local storage');
+        return await _signUpLocally(name, email, password);
       }
-
-      // Create new user
-      final user = User(
-        id: _generateUserId(),
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        createdAt: DateTime.now(),
-        lastActiveAt: DateTime.now(),
-        preferences: _getDefaultPreferences(),
-      );
-
-      // Save user data
-      await _saveUser(user, password);
-      await _setCurrentUser(user);
-
-      // Track sign up
-      await _trackUserAction('sign_up', {'method': 'email'});
-
-      return AuthResult(
-        success: true,
-        user: user,
-        message: 'Account created successfully',
-      );
     } catch (e) {
       return AuthResult(
         success: false,
@@ -110,7 +108,111 @@ class AuthService {
         return AuthResult(success: false, message: 'Please fill in all fields');
       }
 
-      // Get user data
+      // Try backend first
+      try {
+        final backendResponse = await http.post(
+          Uri.parse('$baseUrl/login'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email.trim().toLowerCase(),
+            'password': password,
+          }),
+        );
+
+        if (backendResponse.statusCode == 200) {
+          final responseData = jsonDecode(backendResponse.body);
+
+          // Create user from backend response
+          final user = User(
+            id: responseData['user']['id'],
+            name: responseData['user']['name'],
+            email: responseData['user']['email'],
+            profilePicture: responseData['user']['profilePicture'],
+            createdAt: DateTime.parse(responseData['user']['createdAt']),
+            lastActiveAt: DateTime.now(),
+            preferences: Map<String, dynamic>.from(
+              responseData['user']['preferences'] ?? _getDefaultPreferences(),
+            ),
+            totalHabits: responseData['user']['totalHabits'] ?? 0,
+            completedHabits: responseData['user']['completedHabits'] ?? 0,
+            longestStreak: responseData['user']['longestStreak'] ?? 0,
+          );
+
+          // Update local storage and set as current user
+          await _updateUser(user);
+          await _setCurrentUser(user);
+          await _trackUserAction('sign_in', {'method': 'backend'});
+
+          return AuthResult(
+            success: true,
+            user: user,
+            message: 'Welcome back!',
+          );
+        } else {
+          final errorData = jsonDecode(backendResponse.body);
+          // If backend fails, try local storage
+          return await _signInLocally(email, password);
+        }
+      } catch (e) {
+        // Backend connection failed, use local storage
+        print('Backend signin failed: $e, using local storage');
+        return await _signInLocally(email, password);
+      }
+    } catch (e) {
+      return AuthResult(
+        success: false,
+        message: 'Failed to sign in: ${e.toString()}',
+      );
+    }
+  }
+
+  // Local fallback methods
+  Future<AuthResult> _signUpLocally(
+    String name,
+    String email,
+    String password,
+  ) async {
+    try {
+      // Check if user already exists locally
+      final existingUser = await _getUserByEmail(email);
+      if (existingUser != null) {
+        return AuthResult(
+          success: false,
+          message: 'User with this email already exists',
+        );
+      }
+
+      // Create new user
+      final user = User(
+        id: _generateUserId(),
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        createdAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
+        preferences: _getDefaultPreferences(),
+      );
+
+      // Save user data locally
+      await _saveUser(user, password);
+      await _setCurrentUser(user);
+      await _trackUserAction('sign_up', {'method': 'local'});
+
+      return AuthResult(
+        success: true,
+        user: user,
+        message: 'Account created successfully (offline mode)',
+      );
+    } catch (e) {
+      return AuthResult(
+        success: false,
+        message: 'Failed to create account: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<AuthResult> _signInLocally(String email, String password) async {
+    try {
+      // Get user data from local storage
       final userData = await _getUserDataByEmail(email.trim().toLowerCase());
       if (userData == null) {
         return AuthResult(success: false, message: 'User not found');
@@ -130,12 +232,10 @@ class AuthService {
         userData['user'],
       ).copyWith(lastActiveAt: DateTime.now());
 
-      // Update user data
+      // Update user data and set as current user
       await _updateUser(user);
       await _setCurrentUser(user);
-
-      // Track sign in
-      await _trackUserAction('sign_in', {'method': 'email'});
+      await _trackUserAction('sign_in', {'method': 'local'});
 
       return AuthResult(success: true, user: user, message: 'Welcome back!');
     } catch (e) {
@@ -151,6 +251,17 @@ class AuthService {
       if (_currentUser != null) {
         await _trackUserAction('sign_out', {});
         await _endCurrentSession();
+
+        // Try to notify backend about logout
+        try {
+          await http.post(
+            Uri.parse('$baseUrl/logout'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'userId': _currentUser!.id}),
+          );
+        } catch (e) {
+          print('Backend logout failed: $e');
+        }
       }
 
       _currentUser = null;
@@ -177,6 +288,27 @@ class AuthService {
         lastActiveAt: DateTime.now(),
       );
 
+      // Try to update on backend first
+      try {
+        final response = await http.put(
+          Uri.parse('$baseUrl/profile'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'userId': updatedUser.id,
+            'name': updatedUser.name,
+            'profilePicture': updatedUser.profilePicture,
+            'preferences': updatedUser.preferences,
+          }),
+        );
+
+        if (response.statusCode != 200) {
+          print('Backend profile update failed');
+        }
+      } catch (e) {
+        print('Backend profile update error: $e');
+      }
+
+      // Update locally regardless of backend result
       await _updateUser(updatedUser);
       _currentUser = updatedUser;
       await _setCurrentUser(updatedUser);
@@ -209,12 +341,29 @@ class AuthService {
       final validation = _validatePassword(newPassword);
       if (!validation.isValid) return false;
 
-      // Update password
+      // Try to update on backend first
+      try {
+        final response = await http.put(
+          Uri.parse('$baseUrl/change-password'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'userId': _currentUser!.id,
+            'currentPassword': currentPassword,
+            'newPassword': newPassword,
+          }),
+        );
+
+        if (response.statusCode != 200) {
+          print('Backend password change failed');
+        }
+      } catch (e) {
+        print('Backend password change error: $e');
+      }
+
+      // Update locally regardless of backend result
       final hashedPassword = _hashPassword(newPassword);
       userData['hashedPassword'] = hashedPassword;
-
       await _saveUserData(_currentUser!.email, userData);
-
       await _trackUserAction('password_change', {});
 
       return true;
@@ -244,6 +393,22 @@ class AuthService {
         createdAt: DateTime.now(),
       );
 
+      // Try to submit to backend first
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/feedback'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(feedback.toJson()),
+        );
+
+        if (response.statusCode != 201) {
+          print('Backend feedback submission failed');
+        }
+      } catch (e) {
+        print('Backend feedback submission error: $e');
+      }
+
+      // Save locally regardless of backend result
       await _saveFeedback(feedback);
       await _trackUserAction('feedback_submitted', {
         'type': type.toString().split('.').last,
@@ -421,7 +586,7 @@ class AuthService {
   }
 
   String _hashPassword(String password) {
-    final salt = 'habitflow_salt_2024';
+    final salt = 'habitflow_salt_2025';
     final bytes = utf8.encode(password + salt);
     final digest = sha256.convert(bytes);
     return digest.toString();
@@ -558,6 +723,8 @@ class AuthService {
       if (_currentUser == null) return;
 
       final sessions = await _getUserSessions();
+      if (sessions.isEmpty) return;
+
       final currentSession = sessions.lastWhere(
         (s) => s.userId == _currentUser!.id && s.endTime == null,
         orElse: () => throw StateError('No active session'),
@@ -600,3 +767,5 @@ class ValidationResult {
 
   ValidationResult(this.isValid, this.message);
 }
+
+
