@@ -19,6 +19,8 @@ class DatabaseService {
     return _database!;
   }
 
+  static const String baseUrl = 'http://10.0.2.2:3000';
+
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'habit_tracker.db');
@@ -27,14 +29,18 @@ class DatabaseService {
   }
 
   Future<String?> sendFeedback(String email, String message) async {
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/api/feedback'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'message': message}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'message': message}),
+      );
 
-    if (response.statusCode == 201) return null;
-    return jsonDecode(response.body)['error'];
+      if (response.statusCode == 201) return null;
+      return jsonDecode(response.body)['error'] ?? 'Submission failed';
+    } catch (e) {
+      return 'Error: $e';
+    }
   }
 
   Future<void> _createTables(Database db, int version) async {
@@ -318,11 +324,9 @@ class DatabaseService {
       GROUP BY h.category
     ''');
 
-    return Map.fromIterable(
-      result,
-      key: (item) => item['category'] as String,
-      value: (item) => item['count'] as int,
-    );
+    return {
+      for (var item in result) item['category'] as String: item['count'] as int,
+    };
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyStats() async {
