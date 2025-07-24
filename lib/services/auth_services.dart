@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:habit_tracker/models/users.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class AuthService {
   User? get currentUser => _currentUser;
 
   // Backend URL - change this to your actual backend URL
-  final String baseUrl = 'http://localhost:3000/api/auth';
+  final String baseUrl = 'http://localhost:3000/api';
 
   // Initialize service
   Future<void> initialize() async {
@@ -34,67 +35,36 @@ class AuthService {
     required String password,
   }) async {
     try {
-      // Validate input
-      final validation = _validateSignUpData(name, email, password);
-      if (!validation.isValid) {
-        return AuthResult(success: false, message: validation.message);
-      }
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'password': password,
+          'deviceInfo': {
+            'platform': Platform.operatingSystem,
+            'version': Platform.version,
+          },
+        }),
+      );
 
-      // Try backend first
-      try {
-        final backendResponse = await http.post(
-          Uri.parse('$baseUrl/signup'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'name': name.trim(),
-            'email': email.trim().toLowerCase(),
-            'password': password,
-          }),
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body)['user'];
+        return AuthResult(
+          success: true,
+          user: User.fromJson(data),
+          message: '',
         );
-
-        if (backendResponse.statusCode == 201) {
-          final responseData = jsonDecode(backendResponse.body);
-
-          // Create user from backend response or create local user
-          final user = User(
-            id: responseData['user']?['id'] ?? _generateUserId(),
-            name: responseData['user']?['name'] ?? name.trim(),
-            email: responseData['user']?['email'] ?? email.trim().toLowerCase(),
-            createdAt:
-                responseData['user']?['createdAt'] != null
-                    ? DateTime.parse(responseData['user']['createdAt'])
-                    : DateTime.now(),
-            lastActiveAt: DateTime.now(),
-            preferences:
-                responseData['user']?['preferences'] ??
-                _getDefaultPreferences(),
-          );
-
-          // Save locally and set as current user
-          await _saveUser(user, password);
-          await _setCurrentUser(user);
-          await _trackUserAction('sign_up', {'method': 'backend'});
-
-          return AuthResult(
-            success: true,
-            user: user,
-            message: 'Account created successfully',
-          );
-        } else {
-          final errorData = jsonDecode(backendResponse.body);
-          // If backend fails, fall back to local storage
-          return await _signUpLocally(name, email, password);
-        }
-      } catch (e) {
-        // Backend connection failed, use local storage
-        print('Backend signup failed: $e, using local storage');
-        return await _signUpLocally(name, email, password);
+      } else {
+        final jsonBody = jsonDecode(response.body);
+        return AuthResult(
+          success: false,
+          message: jsonBody['error'] ?? 'Signup failed',
+        );
       }
     } catch (e) {
-      return AuthResult(
-        success: false,
-        message: 'Failed to create account: ${e.toString()}',
-      );
+      return AuthResult(success: false, message: 'Network or server error');
     }
   }
 
@@ -341,7 +311,6 @@ class AuthService {
       final validation = _validatePassword(newPassword);
       if (!validation.isValid) return false;
 
-      // Try to update on backend first
       try {
         final response = await http.put(
           Uri.parse('$baseUrl/change-password'),
@@ -592,29 +561,8 @@ class AuthService {
     return 'user_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}';
   }
 
-  String _generateFeedbackId() {
-    return 'feedback_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}';
-  }
-
   String _generateSessionId() {
     return 'session_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}';
-  }
-
-  ValidationResult _validateSignUpData(
-    String name,
-    String email,
-    String password,
-  ) {
-    if (name.trim().isEmpty) {
-      return ValidationResult(false, 'Name is required');
-    }
-    if (name.trim().length < 2) {
-      return ValidationResult(false, 'Name must be at least 2 characters');
-    }
-    if (!_isValidEmail(email)) {
-      return ValidationResult(false, 'Please enter a valid email address');
-    }
-    return _validatePassword(password);
   }
 
   ValidationResult _validatePassword(String password) {
@@ -649,17 +597,6 @@ class AuthService {
       'privacyMode': false,
     };
   }
-
-  // Future<void> _saveFeedback(UserFeedback feedback) async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final allFeedback = prefs.getStringList(_feedbackKey) ?? [];
-  //     allFeedback.add(json.encode(feedback.toJson()));
-  //     await prefs.setStringList(_feedbackKey, allFeedback);
-  //   } catch (e) {
-  //     print('Error saving feedback: $e');
-  //   }
-  // }
 
   Future<void> _saveSession(UserSession session) async {
     try {

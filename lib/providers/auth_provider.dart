@@ -61,20 +61,29 @@ class AuthProvider with ChangeNotifier {
         password: password,
       );
 
-      if (result.success) {
+      if (result.success && result.user != null) {
         _currentUser = result.user;
+        // Optionally store token/user in shared preferences
+        await _saveUserToLocal(result.user!);
       }
 
       return result;
     } catch (e) {
       return AuthResult(
         success: false,
-        message: 'An error occurred during sign up',
+        message: 'An error occurred during sign up: ${e.toString()}',
       );
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> _saveUserToLocal(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('user_id', user.id);
+    prefs.setString('user_name', user.name);
+    prefs.setString('user_email', user.email);
   }
 
   // Check if user is already authenticated (from SharedPreferences)
