@@ -383,43 +383,35 @@ class AuthService {
     try {
       if (_currentUser == null) return false;
 
-      final feedback = UserFeedback(
-        id: _generateFeedbackId(),
-        userId: _currentUser!.id,
-        title: title,
-        content: content,
-        type: type,
-        rating: rating,
-        createdAt: DateTime.now(),
+      // Get device info
+      final deviceInfo = await _getDeviceInfo();
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': _currentUser!.id,
+          'title': title,
+          'content': content,
+          'rating': rating,
+          'deviceInfo': deviceInfo,
+          'appVersion': '1.0.0', // Your app version
+        }),
       );
 
-      // Try to submit to backend first
-      try {
-        final response = await http.post(
-          Uri.parse('$baseUrl/feedback'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(feedback.toJson()),
-        );
-
-        if (response.statusCode != 201) {
-          print('Backend feedback submission failed');
-        }
-      } catch (e) {
-        print('Backend feedback submission error: $e');
-      }
-
-      // Save locally regardless of backend result
-      await _saveFeedback(feedback);
-      await _trackUserAction('feedback_submitted', {
-        'type': type.toString().split('.').last,
-        'rating': rating,
-      });
-
-      return true;
+      return response.statusCode == 201;
     } catch (e) {
       print('Error submitting feedback: $e');
       return false;
     }
+  }
+
+  Future<Map<String, dynamic>> _getDeviceInfo() async {
+    // Add device_info_plus package and return device details
+    return {
+      'platform': 'mobile',
+      'timestamp': DateTime.now().toIso8601String(),
+    };
   }
 
   Future<List<UserFeedback>> getUserFeedback() async {
@@ -658,16 +650,16 @@ class AuthService {
     };
   }
 
-  Future<void> _saveFeedback(UserFeedback feedback) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final allFeedback = prefs.getStringList(_feedbackKey) ?? [];
-      allFeedback.add(json.encode(feedback.toJson()));
-      await prefs.setStringList(_feedbackKey, allFeedback);
-    } catch (e) {
-      print('Error saving feedback: $e');
-    }
-  }
+  // Future<void> _saveFeedback(UserFeedback feedback) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final allFeedback = prefs.getStringList(_feedbackKey) ?? [];
+  //     allFeedback.add(json.encode(feedback.toJson()));
+  //     await prefs.setStringList(_feedbackKey, allFeedback);
+  //   } catch (e) {
+  //     print('Error saving feedback: $e');
+  //   }
+  // }
 
   Future<void> _saveSession(UserSession session) async {
     try {
@@ -767,5 +759,3 @@ class ValidationResult {
 
   ValidationResult(this.isValid, this.message);
 }
-
-
