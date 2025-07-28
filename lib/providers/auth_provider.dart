@@ -224,15 +224,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  String _hashPassword(String password) {
-    // Simple hash for demo - in production use proper hashing like bcrypt
-    return password.codeUnits.map((e) => e * 7 % 256).join();
-  }
-
-  String _generateUserId() {
-    final random = Random();
-    return '${DateTime.now().millisecondsSinceEpoch}_${random.nextInt(10000)}';
-  }
+  // String _hashPassword(String password) {
+  //   // Simple hash for demo - in production use proper hashing like bcrypt
+  //   return password.codeUnits.map((e) => e * 7 % 256).join();
+  // }
+  //
+  // String _generateUserId() {
+  //   final random = Random();
+  //   return '${DateTime.now().millisecondsSinceEpoch}_${random.nextInt(10000)}';
+  // }
 
   // Analytics and feedback methods
   Future<void> trackEvent(String event, Map<String, dynamic> parameters) async {
@@ -332,4 +332,3 @@ class AuthProvider with ChangeNotifier {
     return users[email];
   }
 }
-

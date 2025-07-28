@@ -221,21 +221,10 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
 
                 const SizedBox(height: 40),
-
                 // Loading Indicator
                 const CircularProgressIndicator(
                   strokeWidth: 3,
                   color: Colors.white70,
-                ),
-
-                // Optional: Add a fun message or motivational quote
-                const SizedBox(height: 20),
-                Text(
-                  'One habit at a time.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colorScheme.onPrimary.withOpacity(0.7),
-                  ),
                 ),
               ],
             ),
@@ -245,4 +234,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-
