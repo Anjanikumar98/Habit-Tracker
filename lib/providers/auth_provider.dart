@@ -323,7 +323,7 @@ class AuthProvider with ChangeNotifier {
     return now.difference(createdAt).inDays;
   }
 
-  String _usersKey = 'users_data';
+  final String _usersKey = 'users_data';
 
   Future<Map<String, dynamic>?> _getUserFromDatabase(String email) async {
     final prefs = await SharedPreferences.getInstance();

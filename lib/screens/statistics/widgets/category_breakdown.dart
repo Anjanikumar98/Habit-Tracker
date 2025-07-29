@@ -116,7 +116,7 @@ class CategoryBreakdown extends StatelessWidget {
                       percentage,
                     ),
                   );
-                }).toList(),
+                }),
                 if (categoryStats.length > 1) ...[
                   const Divider(),
                   const SizedBox(height: 12),
@@ -283,7 +283,7 @@ class CategoryBreakdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
       ),

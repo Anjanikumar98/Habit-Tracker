@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:habit_tracker/models/users.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -677,7 +678,9 @@ class AuthService {
 
       await _updateSession(updatedSession);
     } catch (e) {
-      print('Error tracking user action: $e');
+      if (kDebugMode) {
+        print('Error tracking user action: $e');
+      }
     }
   }
 }

@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       child: Scaffold(
         appBar: CustomAppBar(
-          title: 'Habit Tracker',
+          title: context.watch<AuthProvider>().getGreeting(),
           showBackButton: false,
           actions: [
             IconButton(

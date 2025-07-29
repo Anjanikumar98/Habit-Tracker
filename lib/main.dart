@@ -73,9 +73,9 @@ class _AppInitializerState extends State<AppInitializer> {
       final prefs = await SharedPreferences.getInstance();
       final isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
-      // Check if user is already authenticated
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final isAuthenticated = await authProvider.checkAuthStatus();
+      await authProvider.initialize();
+      final isAuthenticated = authProvider.currentUser != null;
 
       await Future.delayed(const Duration(milliseconds: 1500));
 

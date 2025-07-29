@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen>
           }
 
           // Success haptic feedback
-      //    HapticFeedback.notificationSuccess();
+          HapticFeedback.mediumImpact();
 
           // Show success message briefly
           ScaffoldMessenger.of(context).showSnackBar(
@@ -191,14 +191,14 @@ class _LoginScreenState extends State<LoginScreen>
           }
         } else {
           // Error haptic feedback
-        //  HapticFeedback.notificationError();
+          HapticFeedback.heavyImpact();
 
           _showErrorSnackBar(result.message);
         }
       }
     } catch (e) {
       if (mounted) {
-   //     HapticFeedback.notificationError();
+        HapticFeedback.heavyImpact();
         _showErrorSnackBar('An unexpected error occurred. Please try again.');
       }
     }
@@ -251,12 +251,10 @@ class _LoginScreenState extends State<LoginScreen>
       barrierDismissible: false,
       builder:
           (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.fingerprint, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('Biometric Authentication'),
-              ],
+            title: const ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.fingerprint, color: Colors.blue),
+              title: Text('Biometric Authentication'),
             ),
             content: const Text(
               'Place your finger on the sensor or look at the camera.',
@@ -269,7 +267,6 @@ class _LoginScreenState extends State<LoginScreen>
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // Simulate successful authentication
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (context) => const HomeScreen()),
                   );
@@ -518,7 +515,7 @@ class _LoginScreenState extends State<LoginScreen>
                               ],
                             ),
 
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 31),
 
                             // Enhanced Sign In Button
                             Consumer<AuthProvider>(
@@ -548,7 +545,7 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ],
 
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 31),
 
                             // Enhanced Divider
                             Row(
@@ -602,7 +599,7 @@ class _LoginScreenState extends State<LoginScreen>
                               ],
                             ),
 
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 31),
 
                             // Enhanced Sign Up Link
                             Row(

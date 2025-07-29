@@ -158,7 +158,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     }
 
     if (!_agreeToTerms) {
-      //    HapticFeedback.notificationError();
+      HapticFeedback.heavyImpact();
       _showErrorDialog(
         'Terms Required',
         'Please agree to the Terms and Conditions to continue.',
@@ -167,7 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     }
 
     if (_passwordStrength < 0.5) {
-      //  HapticFeedback.notificationError();
+      HapticFeedback.heavyImpact();
       _showErrorDialog(
         'Weak Password',
         'Please choose a stronger password for better security.',
@@ -184,12 +184,12 @@ class _SignUpScreenState extends State<SignUpScreen>
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        //   agreeToMarketing: _agreeToMarketing,
+        //    agreeToMarketing: _agreeToMarketing,
       );
 
       if (mounted) {
         if (result.success) {
-          //    HapticFeedback.notificationSuccess();
+          HapticFeedback.mediumImpact();
 
           // Show success dialog instead of snackbar
           await _showSuccessDialog();
@@ -213,13 +213,13 @@ class _SignUpScreenState extends State<SignUpScreen>
             );
           }
         } else {
-          //   HapticFeedback.notificationError();
+          HapticFeedback.heavyImpact();
           _showErrorDialog('Sign Up Failed', result.message);
         }
       }
     } catch (e) {
       if (mounted) {
-        //    HapticFeedback.notificationError();
+        HapticFeedback.heavyImpact();
         _showErrorDialog(
           'Error',
           'An unexpected error occurred. Please try again.',
@@ -493,7 +493,7 @@ For complete policy, visit our website.''',
                           ],
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 31),
 
                         // Form Fields
                         CustomTextField(
@@ -816,7 +816,7 @@ For complete policy, visit our website.''',
                           ],
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 31),
 
                         // Enhanced Create Account Button
                         Consumer<AuthProvider>(
@@ -881,4 +881,3 @@ For complete policy, visit our website.''',
     );
   }
 }
-
