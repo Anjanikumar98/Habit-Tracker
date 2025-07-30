@@ -8,6 +8,10 @@ import '../../widgets/empty_state.dart';
 import 'widgets/completion_chart.dart';
 import 'widgets/streak_display.dart';
 import 'widgets/habit_insights.dart';
+import 'widgets/overall_stats_card.dart';
+import 'widgets/productivity_score.dart';
+import 'widgets/time_based_analytics.dart';
+import 'widgets/weekly_monthly_progress.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -21,59 +25,16 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   final AnalyticsService _analyticsService = AnalyticsService();
   late TabController _tabController;
 
-  Map<String, dynamic>? _overallStats;
-  Map<String, dynamic>? _streakAnalytics;
-  Map<String, dynamic>? _categoryAnalytics;
-  Map<String, dynamic>? _timeBasedAnalytics;
-  double? _productivityScore;
-  List<Map<String, dynamic>>? _insights;
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _loadAnalytics();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAnalytics() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final results = await Future.wait([
-        _analyticsService.getOverallStats(),
-        _analyticsService.getStreakAnalytics(),
-        _analyticsService.getCategoryAnalytics(),
-        _analyticsService.getTimeBasedAnalytics(),
-        _analyticsService.getProductivityScore(),
-        _analyticsService.getHabitInsights(),
-      ]);
-
-      if (mounted) {
-        setState(() {
-          _overallStats = results[0] as Map<String, dynamic>;
-          _streakAnalytics = results[1] as Map<String, dynamic>;
-          _categoryAnalytics = results[2] as Map<String, dynamic>;
-          _timeBasedAnalytics = results[3] as Map<String, dynamic>;
-          _productivityScore = results[4] as double;
-          _insights = results[5] as List<Map<String, dynamic>>;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading analytics: $e')));
-      }
-    }
   }
 
   @override
@@ -105,16 +66,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               );
             }
 
-            if (_isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
             return RefreshIndicator(
               onRefresh: () async {
-                await Future.wait([
-                  habitProvider.loadHabits(),
-                  _loadAnalytics(),
-                ]);
+                await habitProvider.loadHabits();
               },
               child: TabBarView(
                 controller: _tabController,
@@ -138,11 +92,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildProductivityScoreCard(),
+          ProductivityScoreWidget(),
           const SizedBox(height: 16),
-          _buildOverallStatsCard(),
+          OverallStatsCard(),
           const SizedBox(height: 16),
-          _buildStreakOverview(),
+          const StreakDisplay(),
           const SizedBox(height: 16),
           const CompletionChart(),
         ],
@@ -156,11 +110,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimeBasedAnalytics(),
+          TimeBasedAnalytics(),
           const SizedBox(height: 16),
-          _buildWeeklyProgress(),
-          const SizedBox(height: 16),
-          _buildMonthlyProgress(),
+          const WeeklyMonthlyProgress(),
         ],
       ),
     );
@@ -172,9 +124,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCategoryBreakdown(),
+          CategoryBreakdown(),
           const SizedBox(height: 16),
-          _buildCategoryPerformance(),
+          _buildCategoryInsights(),
         ],
       ),
     );
@@ -194,374 +146,132 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
-  Widget _buildProductivityScoreCard() {
-    if (_productivityScore == null) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              'Productivity Score',
-              style: Theme.of(context).textTheme.titleLarge,
+  Widget _buildCategoryInsights() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _analyticsService.getCategoryAnalytics(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
             ),
-            const SizedBox(height: 16),
-            Stack(
-              alignment: Alignment.center,
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Error loading category insights'),
+            ),
+          );
+        }
+
+        final categoryAnalytics = snapshot.data!;
+        final categoryStats =
+            categoryAnalytics['categoryStats'] as Map<String, dynamic>? ?? {};
+
+        if (categoryStats.isEmpty) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No category insights available'),
+            ),
+          );
+        }
+
+        // Find best and worst performing categories
+        final sortedCategories =
+            categoryStats.entries.toList()..sort((a, b) {
+              final aRate =
+                  (a.value as Map<String, dynamic>)['completionRate']
+                      as double? ??
+                  0.0;
+              final bRate =
+                  (b.value as Map<String, dynamic>)['completionRate']
+                      as double? ??
+                  0.0;
+              return bRate.compareTo(aRate);
+            });
+
+        final bestCategory = sortedCategories.first;
+        final worstCategory = sortedCategories.last;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: CircularProgressIndicator(
-                    value: _productivityScore! / 100,
-                    strokeWidth: 8,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _getScoreColor(_productivityScore!),
-                    ),
-                  ),
-                ),
                 Text(
-                  '${_productivityScore!.toStringAsFixed(0)}',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: _getScoreColor(_productivityScore!),
+                  'Category Insights',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                _buildCategoryInsightItem(
+                  'Best Performing Category',
+                  bestCategory.key,
+                  '${(((bestCategory.value as Map<String, dynamic>)['completionRate'] as double) * 100).toStringAsFixed(1)}% success rate',
+                  Icons.emoji_events,
+                  Colors.green,
+                ),
+                const SizedBox(height: 12),
+                if (sortedCategories.length > 1)
+                  _buildCategoryInsightItem(
+                    'Needs Attention',
+                    worstCategory.key,
+                    '${(((worstCategory.value as Map<String, dynamic>)['completionRate'] as double) * 100).toStringAsFixed(1)}% success rate',
+                    Icons.trending_down,
+                    Colors.orange,
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              _getScoreDescription(_productivityScore!),
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryInsightItem(
+    String title,
+    String category,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-    );
-  }
-
-  Widget _buildOverallStatsCard() {
-    if (_overallStats == null) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Overall Statistics',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  'Total Habits',
-                  _overallStats!['totalHabits'].toString(),
-                  Icons.list_alt,
-                ),
-                _buildStatItem(
-                  'Active Habits',
-                  _overallStats!['activeHabits'].toString(),
-                  Icons.track_changes,
-                ),
-                _buildStatItem(
-                  'Total Completions',
-                  _overallStats!['totalCompletions'].toString(),
-                  Icons.check_circle,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  'Today',
-                  _overallStats!['completionsToday'].toString(),
-                  Icons.today,
-                ),
-                _buildStatItem(
-                  'Success Rate',
-                  '${(_overallStats!['overallCompletionRate'] * 100).toStringAsFixed(0)}%',
-                  Icons.trending_up,
-                ),
-                _buildStatItem(
-                  'Today\'s Rate',
-                  '${(_overallStats!['todayCompletionRate'] * 100).toStringAsFixed(0)}%',
-                  Icons.speed,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStreakOverview() {
-    if (_streakAnalytics == null) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Streak Overview',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  'Longest Streak',
-                  _streakAnalytics!['longestOverallStreak'].toString(),
-                  Icons.local_fire_department,
-                ),
-                _buildStatItem(
-                  'Active Streaks',
-                  _streakAnalytics!['totalActiveStreaks'].toString(),
-                  Icons.whatshot,
-                ),
-              ],
-            ),
-            if (_streakAnalytics!['longestStreakHabit'] != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Best Habit: ${_streakAnalytics!['longestStreakHabit']}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimeBasedAnalytics() {
-    if (_timeBasedAnalytics == null) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your Peak Performance',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            if (_timeBasedAnalytics!['mostProductiveHour'] != null)
-              _buildInsightRow(
-                'Most Productive Hour',
-                '${_timeBasedAnalytics!['mostProductiveHour']}:00',
-                Icons.access_time,
-              ),
-            if (_timeBasedAnalytics!['mostProductiveDayOfWeek'] != null)
-              _buildInsightRow(
-                'Best Day of Week',
-                _getDayName(_timeBasedAnalytics!['mostProductiveDayOfWeek']),
-                Icons.calendar_today,
-              ),
-            if (_timeBasedAnalytics!['mostProductiveMonth'] != null)
-              _buildInsightRow(
-                'Best Month',
-                _getMonthName(_timeBasedAnalytics!['mostProductiveMonth']),
-                Icons.calendar_month,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryBreakdown() {
-    if (_categoryAnalytics == null) return const SizedBox.shrink();
-
-    final categoryStats =
-        _categoryAnalytics!['categoryStats'] as Map<String, dynamic>;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Category Performance',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            CategoryBreakdown(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPersonalizedInsights() {
-    if (_insights == null || _insights!.isEmpty) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Personalized Insights',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            ..._insights!.take(5).map((insight) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _getInsightColor(
-                      insight['severity'],
-                    ).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _getInsightColor(
-                        insight['severity'],
-                      ).withOpacity(0.3),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _getInsightIcon(insight['type']),
-                            color: _getInsightColor(insight['severity']),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              insight['message'] ?? '',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (insight['suggestion'] != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          insight['suggestion'],
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Placeholder widgets for future implementation
-  Widget _buildWeeklyProgress() {
-    return const Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Weekly Progress'),
-            SizedBox(height: 16),
-            Text('Weekly progress chart will be implemented here'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMonthlyProgress() {
-    return const Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Monthly Progress'),
-            SizedBox(height: 16),
-            Text('Monthly progress chart will be implemented here'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryPerformance() {
-    return const Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Category Performance Chart'),
-            SizedBox(height: 16),
-            Text('Category performance visualization will be implemented here'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInsightRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Icon(icon, color: color, size: 24),
           const SizedBox(width: 12),
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.primary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                ),
+                Text(
+                  category,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                Text(description, style: Theme.of(context).textTheme.bodySmall),
+              ],
             ),
           ),
         ],
@@ -569,18 +279,104 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
-  Color _getScoreColor(double score) {
-    if (score >= 80) return Colors.green;
-    if (score >= 60) return Colors.orange;
-    if (score >= 40) return Colors.yellow[700]!;
-    return Colors.red;
-  }
+  Widget _buildPersonalizedInsights() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _analyticsService.getHabitInsights(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
 
-  String _getScoreDescription(double score) {
-    if (score >= 80) return 'Excellent! You\'re crushing your goals!';
-    if (score >= 60) return 'Great work! Keep up the momentum!';
-    if (score >= 40) return 'Good progress! Room for improvement.';
-    return 'Let\'s work on building consistency!';
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(Icons.lightbulb_outline, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('No personalized insights available'),
+                  Text('Complete more habits to get insights!'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final insights = snapshot.data!;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Personalized Insights',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ...insights.take(5).map((insight) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getInsightColor(
+                          insight['severity'],
+                        ).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _getInsightColor(
+                            insight['severity'],
+                          ).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _getInsightIcon(insight['type']),
+                                color: _getInsightColor(insight['severity']),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  insight['message'] ?? '',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (insight['suggestion'] != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              insight['suggestion'],
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Color _getInsightColor(String? severity) {
@@ -614,35 +410,5 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         return Icons.lightbulb;
     }
   }
-
-  String _getDayName(int dayOfWeek) {
-    const days = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    return days[dayOfWeek - 1];
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months[month - 1];
-  }
 }
+
