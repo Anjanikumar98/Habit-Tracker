@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/habit.dart';
 import '../models/habit_completion.dart';
@@ -14,6 +16,16 @@ class HabitProvider extends ChangeNotifier {
   List<HabitCompletion> get completions => _completions;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Timer? _refreshTimer;
+  StreamSubscription? _dbSubscription;
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _dbSubscription?.cancel();
+    super.dispose();
+  }
 
   HabitProvider() {
     loadHabits();

@@ -359,6 +359,35 @@ class NotificationService {
     return false;
   }
 
+  // Add notification channels for better Android support
+  Future<void> _createNotificationChannels() async {
+    const habitReminders = AndroidNotificationChannel(
+      'habit_reminders',
+      'Habit Reminders',
+      description: 'Daily habit reminder notifications',
+      importance: Importance.high,
+    );
+
+    const achievements = AndroidNotificationChannel(
+      'achievements',
+      'Achievements',
+      description: 'Streak milestones and achievements',
+      importance: Importance.defaultImportance,
+    );
+
+    await _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(habitReminders);
+
+    await _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(achievements);
+  }
+
   void dispose() {
     // Clean up resources if needed
   }

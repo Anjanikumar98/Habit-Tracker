@@ -4,6 +4,11 @@ import 'database_service.dart';
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
+
+  // Cache frequently accessed data
+  Map<String, dynamic>? _cachedStats;
+  DateTime? _lastCacheUpdate;
+
   AnalyticsService._internal();
 
   final DatabaseService _databaseService = DatabaseService();
@@ -34,18 +39,17 @@ class AnalyticsService {
   // Streak Analytics
   Future<Map<String, dynamic>> getStreakAnalytics() async {
     final habits = await _databaseService.getHabits();
-    final streakData = <String, dynamic>{};
+    final List<Map<String, dynamic>> streakBreakdown = [];
 
     int longestStreak = 0;
     int totalActiveStreaks = 0;
     String longestStreakHabit = '';
-    List<Map<String, dynamic>> streakBreakdown = [];
 
     for (final habit in habits) {
       if (!habit.isActive) continue;
 
-      final currentStreak = await getCurrentStreak(habit.id);
-      final longestHabitStreak = await getLongestStreak(habit.id);
+      final int currentStreak = await getCurrentStreak(habit.id);
+      final int longestHabitStreak = await getLongestStreak(habit.id);
 
       if (currentStreak > 0) {
         totalActiveStreaks++;
@@ -66,20 +70,22 @@ class AnalyticsService {
     }
 
     streakBreakdown.sort(
-      (a, b) => b['currentStreak'].compareTo(a['currentStreak']),
+      (a, b) =>
+          (b['currentStreak'] as int).compareTo(a['currentStreak'] as int),
     );
+
+    final double totalCurrentStreak = streakBreakdown
+        .where((s) => (s['currentStreak'] as int) > 0)
+        .fold(0.0, (sum, s) => sum + (s['currentStreak'] as num));
+
+    final double averageActiveStreak =
+        totalActiveStreaks > 0 ? totalCurrentStreak / totalActiveStreaks : 0.0;
 
     return {
       'longestOverallStreak': longestStreak,
       'longestStreakHabit': longestStreakHabit,
       'totalActiveStreaks': totalActiveStreaks,
-      // 'averageActiveStreak':
-      //     totalActiveStreaks > 0
-      //         ? streakBreakdown
-      //                 .where((s) => s['currentStreak'] > 0)
-      //                 .fold(0, (sum, s) => sum + s['currentStreak']) /
-      //             totalActiveStreaks
-      //         : 0.0,
+      'averageActiveStreak': averageActiveStreak,
       'streakBreakdown': streakBreakdown,
     };
   }

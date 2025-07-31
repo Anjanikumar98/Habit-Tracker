@@ -28,6 +28,22 @@ class DatabaseService {
     return await openDatabase(path, version: 1, onCreate: _createTables);
   }
 
+  Future<void> batchUpdateCompletions(List<HabitCompletion> completions) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final completion in completions) {
+        batch.update(
+          'habit_completions',
+          completion.toMap(),
+          where: 'id = ?',
+          whereArgs: [completion.id],
+        );
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
   Future<String?> sendFeedback(String email, String message) async {
     try {
       final response = await http.post(
@@ -41,6 +57,18 @@ class DatabaseService {
     } catch (e) {
       return 'Error: $e';
     }
+  }
+
+  Future<void> _createIndexes(Database db) async {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_habit_id_date ON habit_completions(habit_id, date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_habit_category ON habits(category)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_completion_date ON habit_completions(date DESC)',
+    );
   }
 
   Future<void> _createTables(Database db, int version) async {
@@ -369,3 +397,4 @@ class DatabaseService {
     await db.close();
   }
 }
+
