@@ -4,6 +4,7 @@ import '../../../models/habit.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../widgets/completion_button.dart';
 import '../../../widgets/streak_badge.dart';
+import '../../../widgets/habit_progress_indicator.dart';
 import '../../habits_detail/habit_detail_screen.dart';
 
 class HabitCard extends StatelessWidget {
@@ -15,11 +16,21 @@ class HabitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
+        final streak = habitProvider.getHabitStreak(habit.id);
+        final frequency = habit.frequency;
         final isCompleted = habitProvider.isHabitCompletedToday(habit);
-        final completionRate = isCompleted ? 1.0 : 0.0;
+
+        // Calculate proper completion rate based on habit progress
+        final completionRate = habitProvider.getHabitCompletionRate(habit.id);
+
+        final theme = Theme.of(context);
+        final textTheme = theme.textTheme;
+        final colorScheme = theme.colorScheme;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          color: colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -37,8 +48,10 @@ class HabitCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header row with habit info and completion button
                   Row(
                     children: [
+                      // Color indicator
                       Container(
                         width: 4,
                         height: 40,
@@ -48,67 +61,108 @@ class HabitCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
+
+                      // Habit details
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               habit.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
-                            if (habit.description.isNotEmpty)
+                            if (habit.description.isNotEmpty) ...[
+                              const SizedBox(height: 4),
                               Text(
                                 habit.description,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                            ],
                           ],
                         ),
                       ),
+
+                      // Completion button - using the custom widget correctly
                       CompletionButton(
                         isCompleted: isCompleted,
+                        color: habit.color, // Use habit's actual color
                         onPressed: () {
-                          if (!isCompleted) {
-                            habitProvider.completeHabit(habit.id);
-                          }
+                          habitProvider.toggleHabitCompletion(
+                            habit.id,
+                            DateTime.now(),
+                          );
                         },
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.1),
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // Progress indicator - using the custom widget
+                  HabitProgressIndicator(
+                    progress: completionRate,
+                    color: habit.color,
+                    label: 'Progress',
+                  ),
+
                   const SizedBox(height: 12),
+
+                  // Bottom row with streak and frequency
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Streak badge and completion percentage
                       Row(
                         children: [
-                          StreakBadge(
-                            streak: habit.currentStreak,
-                            isActive: habit.currentStreak > 0,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${(completionRate * 100).toInt()}% complete',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
+                          StreakBadge(streak: streak, isActive: streak > 0),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: habit.color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: habit.color.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              '${(completionRate * 100).toInt()}%',
+                              style: textTheme.labelSmall?.copyWith(
+                                color: habit.color,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      Text(
-                        habit.frequency,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
+
+                      // Frequency info
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceVariant,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          frequency,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],

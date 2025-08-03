@@ -40,7 +40,6 @@ class HabitProvider extends ChangeNotifier {
     );
   }
 
-  // Completion rate = total completions / total days since first completion
   double getCompletionRate(Habit habit) {
     if (habit.completions.isEmpty) return 0.0;
 
@@ -153,6 +152,34 @@ class HabitProvider extends ChangeNotifier {
     return _completions.any(
       (c) => c.habitId == habitId && isSameDay(c.date, date) && c.isCompleted,
     );
+  }
+
+  // Add these methods to your HabitProvider class
+  int getCompletedTodayCount() {
+    final today = DateTime.now();
+    return habits.where((habit) => isHabitCompletedToday(habit)).length;
+  }
+
+  int getLongestStreak() {
+    if (habits.isEmpty) return 0;
+    return habits
+        .map((habit) => getHabitStreak(habit.id))
+        .reduce((max, current) => current > max ? current : max);
+  }
+
+  double getOverallSuccessRate() {
+    if (habits.isEmpty) return 0.0;
+    final totalRate = habits
+        .map((habit) => getHabitCompletionRate(habit.id))
+        .reduce((sum, rate) => sum + rate);
+    return totalRate / habits.length;
+  }
+
+  int getCurrentStreak() {
+    if (habits.isEmpty) return 0;
+    return habits
+        .map((habit) => getHabitStreak(habit.id))
+        .reduce((max, current) => current > max ? current : max);
   }
 
   int getHabitStreak(String habitId) {
@@ -275,4 +302,3 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 }
-

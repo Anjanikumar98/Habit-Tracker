@@ -11,7 +11,7 @@ import '../add_habits/add_habit_screen.dart';
 class HabitDetailScreen extends StatelessWidget {
   final Habit habit;
 
-  const HabitDetailScreen({Key? key, required this.habit}) : super(key: key);
+  const HabitDetailScreen({super.key, required this.habit});
 
   @override
   Widget build(BuildContext context) {

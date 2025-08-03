@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/screens/statistics/widgets/category_breakdown.dart';
+import 'package:habit_tracker/widgets/stat_card.dart';
 import 'package:provider/provider.dart';
 import '../../providers/habit_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state.dart';
+import '../add_habits/add_habit_screen.dart';
 import 'widgets/completion_chart.dart';
 import 'widgets/streak_display.dart';
 import 'widgets/habit_insights.dart';
@@ -39,6 +41,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SafeArea(
       child: Scaffold(
         appBar: CustomAppBar(
@@ -46,6 +50,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           showBackButton: false,
           bottom: TabBar(
             controller: _tabController,
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+            indicatorColor: theme.colorScheme.primary,
             tabs: const [
               Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
               Tab(icon: Icon(Icons.trending_up), text: 'Trends'),
@@ -57,12 +64,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         body: Consumer<HabitProvider>(
           builder: (context, habitProvider, child) {
             if (habitProvider.habits.isEmpty) {
-              return const EmptyState(
+              return EmptyState(
                 title: 'No Statistics Yet',
                 subtitle:
                     'Complete some habits to see your statistics and progress.',
                 icon: Icons.analytics,
                 actionText: 'Add Habit',
+                onActionPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+                  );
+                },
               );
             }
 
@@ -87,20 +100,69 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   }
 
   Widget _buildOverviewTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ProductivityScoreWidget(),
-          const SizedBox(height: 16),
-          OverallStatsCard(),
-          const SizedBox(height: 16),
-          const StreakDisplay(),
-          const SizedBox(height: 16),
-          const CompletionChart(),
-        ],
-      ),
+    return Consumer<HabitProvider>(
+      builder: (context, habitProvider, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Stats Grid
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.2, // Adjust card proportions
+                children: [
+                  StatCard(
+                    title: 'Total Habits',
+                    value: '${habitProvider.habits.length}',
+                    icon: Icons.task_alt,
+                    color: Colors.blue,
+                  ),
+                  StatCard(
+                    title: 'Completed Today',
+                    value: '${habitProvider.getCompletedTodayCount()}',
+                    icon: Icons.check_circle,
+                    color: Colors.green,
+                  ),
+                  StatCard(
+                    title: 'Longest Streak',
+                    value: '${habitProvider.getLongestStreak()}',
+                    icon: Icons.local_fire_department,
+                    color: Colors.orange,
+                  ),
+                  StatCard(
+                    title: 'Success Rate',
+                    value:
+                        '${(habitProvider.getOverallSuccessRate() * 100).toInt()}%',
+                    icon: Icons.trending_up,
+                    color: Colors.purple,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Productivity Score Section
+              ProductivityScoreWidget(), // Fixed: Added const
+              const SizedBox(height: 16),
+
+              // Overall Stats Section
+              OverallStatsCard(), // Fixed: Added const
+              const SizedBox(height: 16),
+
+              // Streak Display Section
+              const StreakDisplay(),
+              const SizedBox(height: 16),
+
+              // Completion Chart Section
+              const CompletionChart(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -110,6 +172,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fixed widget instantiation
           TimeBasedAnalytics(),
           const SizedBox(height: 16),
           const WeeklyMonthlyProgress(),
@@ -147,12 +210,16 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   }
 
   Widget _buildCategoryInsights() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _analyticsService.getCategoryAnalytics(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Card(
-            child: Padding(
+          return Card(
+            color: colorScheme.surface,
+            child: const Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -160,10 +227,16 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
-          return const Card(
+          return Card(
+            color: colorScheme.surface,
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Error loading category insights'),
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Error loading category insights',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
             ),
           );
         }
@@ -173,10 +246,16 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             categoryAnalytics['categoryStats'] as Map<String, dynamic>? ?? {};
 
         if (categoryStats.isEmpty) {
-          return const Card(
+          return Card(
+            color: colorScheme.surface,
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('No category insights available'),
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No category insights available',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
             ),
           );
         }
@@ -199,6 +278,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         final worstCategory = sortedCategories.last;
 
         return Card(
+          color: colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -206,9 +286,10 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               children: [
                 Text(
                   'Category Insights',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildCategoryInsightItem(
@@ -242,6 +323,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     IconData icon,
     Color color,
   ) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -259,18 +342,23 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
                 Text(
                   category,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
                 ),
-                Text(description, style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
               ],
             ),
           ),
@@ -280,12 +368,16 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   }
 
   Widget _buildPersonalizedInsights() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _analyticsService.getHabitInsights(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Card(
-            child: Padding(
+          return Card(
+            color: colorScheme.surface,
+            child: const Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -293,15 +385,30 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         }
 
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Card(
+          return Card(
+            color: colorScheme.surface,
             child: Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Icon(Icons.lightbulb_outline, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No personalized insights available'),
-                  Text('Complete more habits to get insights!'),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 48,
+                    color: colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No personalized insights available',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    'Complete more habits to get insights!',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -311,6 +418,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         final insights = snapshot.data!;
 
         return Card(
+          color: colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -318,9 +426,10 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               children: [
                 Text(
                   'Personalized Insights',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ...insights.take(5).map((insight) {
@@ -353,7 +462,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               Expanded(
                                 child: Text(
                                   insight['message'] ?? '',
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                               ),
                             ],
@@ -362,8 +473,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                             const SizedBox(height: 8),
                             Text(
                               insight['suggestion'],
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withOpacity(0.6),
+                              ),
                             ),
                           ],
                         ],
@@ -411,4 +523,3 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
   }
 }
-

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/providers/auth_provider.dart';
+import 'package:habit_tracker/providers/habit_provider.dart';
 import 'package:habit_tracker/providers/settings_provider.dart';
 import 'package:habit_tracker/screens/authentication_screen/feedback_screen.dart';
 import 'package:habit_tracker/screens/authentication_screen/login_screen.dart';
@@ -7,11 +8,21 @@ import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
 import 'package:habit_tracker/screens/setting/widgets/theme_selector.dart';
+import 'package:habit_tracker/widgets/profile_avatar.dart';
+import 'package:habit_tracker/widgets/stat_card.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  // Helper method to get user initials
+  String _getInitials(String name) {
+    if (name.isEmpty) return '??';
+    List<String> names = name.split(' ');
+    if (names.length == 1) return names[0][0].toUpperCase();
+    return '${names[0][0]}${names[1][0]}'.toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +35,13 @@ class SettingsScreen extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // // Profile Section with ProfileAvatar
+            // _buildProfileSection(context),
+            // const SizedBox(height: 24),
+            //
+            // // User Statistics Section with StatCards
+            // _buildUserStatsSection(context),
+            // const SizedBox(height: 24),
             _buildSectionHeader(context, 'Appearance'),
             const ThemeSelector(),
             const SizedBox(height: 24),
@@ -312,6 +330,119 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+  // User Statistics Section with StatCards
+  // Widget _buildUserStatsSection(BuildContext context) {
+  //   return Consumer2<AuthProvider, HabitProvider>(
+  //     builder: (context, authProvider, habitProvider, child) {
+  //       final user = authProvider.currentUser;
+  //       return Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           _buildSectionHeader(context, 'Your Progress'),
+  //           const SizedBox(height: 12),
+  //           GridView.count(
+  //             crossAxisCount: 2,
+  //             shrinkWrap: true,
+  //             physics: const NeverScrollableScrollPhysics(),
+  //             mainAxisSpacing: 12,
+  //             crossAxisSpacing: 12,
+  //             childAspectRatio: 1.3,
+  //             children: [
+  //               StatCard(
+  //                 title: 'Total Habits',
+  //                 value: '${user?.totalHabits ?? habitProvider.habits.length}',
+  //                 icon: Icons.task_alt,
+  //                 color: Colors.blue,
+  //               ),
+  //               StatCard(
+  //                 title: 'Completed',
+  //                 value:
+  //                     '${user?.completedHabits ?? habitProvider.getTotalCompletedHabits()}',
+  //                 icon: Icons.check_circle,
+  //                 color: Colors.green,
+  //               ),
+  //               StatCard(
+  //                 title: 'Best Streak',
+  //                 value:
+  //                     '${user?.longestStreak ?? habitProvider.getLongestStreak()}',
+  //                 icon: Icons.local_fire_department,
+  //                 color: Colors.orange,
+  //               ),
+  //               StatCard(
+  //                 title: 'Days Active',
+  //                 value:
+  //                     '${_calculateDaysActive(user?.createdAt ?? DateTime.now())}',
+  //                 icon: Icons.calendar_today,
+  //                 color: Colors.purple,
+  //               ),
+  //             ],
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+  //
+  // Widget _buildProfileSection(BuildContext context) {
+  //   final colorScheme = Theme.of(context).colorScheme;
+  //   final textTheme = Theme.of(context).textTheme;
+  //
+  //   return Consumer<AuthProvider>(
+  //     builder: (context, authProvider, child) {
+  //       final user = authProvider.currentUser;
+  //       return Card(
+  //         color: colorScheme.surface,
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(20),
+  //           child: Row(
+  //             children: [
+  //               ProfileAvatar(
+  //                 imageUrl: user?.profilePicture,
+  //                 initials: _getInitials(user?.name ?? 'User'),
+  //                 size: 70,
+  //                 onTap: () => _showProfileOptions(context),
+  //               ),
+  //               const SizedBox(width: 16),
+  //               Expanded(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Text(
+  //                       user?.name ?? 'User',
+  //                       style: textTheme.titleLarge?.copyWith(
+  //                         fontWeight: FontWeight.bold,
+  //                         color: colorScheme.onSurface,
+  //                       ),
+  //                     ),
+  //                     const SizedBox(height: 4),
+  //                     Text(
+  //                       user?.email ?? 'user@example.com',
+  //                       style: textTheme.bodyMedium?.copyWith(
+  //                         color: colorScheme.onSurface.withOpacity(0.7),
+  //                       ),
+  //                     ),
+  //                     const SizedBox(height: 8),
+  //                     Text(
+  //                       'Member since ${_formatDate(user?.createdAt ?? DateTime.now())}',
+  //                       style: textTheme.bodySmall?.copyWith(
+  //                         color: colorScheme.onSurface.withOpacity(0.5),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //               IconButton(
+  //                 icon: Icon(Icons.edit, color: colorScheme.primary),
+  //                 onPressed: () => _showProfileOptions(context),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _showStreakGoalDialog(
     BuildContext context,
@@ -857,5 +988,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-
-

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/models/motivational_card/motivation_card.dart';
 import 'package:habit_tracker/providers/auth_provider.dart';
-import 'package:habit_tracker/screens/authentication_screen/login_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/habit_provider.dart';
-import '../../providers/theme_provider.dart';
 import '../../screens/statistics/statistics_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/profile_avatar.dart';
+import '../../widgets/stat_card.dart';
 import '../add_habits/add_habit_screen.dart';
 import '../setting/setting_screen.dart';
 import 'widgets/habit_card.dart';
@@ -29,8 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HabitProvider>().loadHabits();
-      // context.read<ThemeProvider>().loadSettings();
     });
+  }
+
+  // Helper method to get user initials
+  String _getInitials(String name) {
+    if (name.isEmpty) return '??';
+    List<String> names = name.split(' ');
+    if (names.length == 1) return names[0][0].toUpperCase();
+    return '${names[0][0]}${names[1][0]}'.toUpperCase();
   }
 
   @override
@@ -45,6 +52,21 @@ class _HomeScreenState extends State<HomeScreen> {
           title: context.watch<AuthProvider>().getGreeting(),
           showBackButton: false,
           actions: [
+            // Profile Avatar in App Bar
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                final user = authProvider.currentUser;
+                return ProfileAvatar(
+                  imageUrl: user?.profilePicture,
+                  initials: _getInitials(user?.name ?? 'User'),
+                  size: 31,
+                  onTap: () {
+                    setState(() => _currentIndex = 2); // Navigate to Settings
+                  },
+                );
+              },
+            ),
+            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: 'Add Habit',
@@ -98,12 +120,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
         if (habitProvider.habits.isEmpty) {
-          return const EmptyState(
+          return EmptyState(
             title: 'No Habits Yet',
             subtitle:
                 'Create your first habit to get started on your journey to better living.',
             icon: Icons.self_improvement,
             actionText: 'Add Habit',
+            onActionPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+              );
+            },
           );
         }
 
@@ -117,30 +145,96 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Quick Stats Section - Added here
+                _buildQuickStats(),
+                const SizedBox(height: 16),
+
+                // Motivation Card
                 const MotivationCard(),
                 const SizedBox(height: 12),
 
+                // Progress Summary
                 const ProgressSummary(),
                 const SizedBox(height: 12),
 
+                // Quick Add Habit
                 const QuickAddHabit(),
                 const SizedBox(height: 16),
 
-                ListView.builder(
-                  itemCount: habitProvider.habits.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final habit = habitProvider.habits[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: HabitCard(habit: habit),
-                    );
-                  },
-                ),
+                // Section Header for Habits
+                if (habitProvider.habits.isNotEmpty) ...[
+                  Text(
+                    'Your Habits',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Habit Cards
+                ...habitProvider.habits
+                    .map(
+                      (habit) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: HabitCard(habit: habit),
+                      ),
+                    )
+                    .toList(),
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  // Quick stats section using StatCard widgets
+  Widget _buildQuickStats() {
+    return Consumer<HabitProvider>(
+      builder: (context, habitProvider, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Today\'s Progress',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    title: 'Completed',
+                    value:
+                        '${habitProvider.getCompletedTodayCount()}/${habitProvider.habits.length}',
+                    icon: Icons.today,
+                    color: Colors.green,
+                    onTap: () {
+                      // Optional: Navigate to today's habits view
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatCard(
+                    title: 'Current Streak',
+                    value: '${habitProvider.getCurrentStreak()}',
+                    icon: Icons.local_fire_department,
+                    color: Colors.orange,
+                    onTap: () {
+                      // Optional: Navigate to streak details
+                      setState(() => _currentIndex = 1); // Go to Statistics
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       },
     );
