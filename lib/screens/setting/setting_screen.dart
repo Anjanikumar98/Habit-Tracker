@@ -8,15 +8,170 @@ import 'package:habit_tracker/screens/onboarding/onboarding_screen.dart';
 import 'package:habit_tracker/screens/setting/widgets/backup_restore.dart';
 import 'package:habit_tracker/screens/setting/widgets/notification_settings.dart';
 import 'package:habit_tracker/screens/setting/widgets/theme_selector.dart';
-import 'package:habit_tracker/widgets/profile_avatar.dart';
-import 'package:habit_tracker/widgets/stat_card.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  // Helper method to get user initials
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        appBar: const CustomAppBar(title: 'Settings', showBackButton: false),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Profile Section (if user is authenticated)
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                if (authProvider.isAuthenticated) {
+                  return Column(
+                    children: [
+                      _buildProfileSection(context, authProvider),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            // Appearance Section
+            const ThemeSelector(),
+            const SizedBox(height: 24),
+
+            // Notifications Section
+            const NotificationSettings(),
+            const SizedBox(height: 24),
+
+            // Habits Configuration Section
+            _buildHabitsSection(context),
+            const SizedBox(height: 24),
+
+            // Language Section
+            _buildLanguageSection(context),
+            const SizedBox(height: 24),
+
+            // Data Management Section
+            const BackupRestore(),
+            const SizedBox(height: 24),
+
+            // About Section
+            _buildAboutSection(context),
+            const SizedBox(height: 24),
+
+            // Danger Zone
+            _buildDangerZone(context),
+            const SizedBox(height: 24),
+
+            // Account Section (if authenticated)
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                if (authProvider.isAuthenticated) {
+                  return _buildAccountSection(context, authProvider);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileSection(BuildContext context, AuthProvider authProvider) {
+    final theme = Theme.of(context);
+    final user = authProvider.currentUser;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child:
+                  user?.profilePicture != null
+                      ? ClipOval(
+                        child: Image.network(
+                          user!.profilePicture!,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) =>
+                                  _buildInitialsAvatar(
+                                    context,
+                                    user.name ?? 'User',
+                                  ),
+                        ),
+                      )
+                      : _buildInitialsAvatar(context, user?.name ?? 'User'),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user?.name ?? 'User',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user?.email ?? authProvider.userEmail ?? 'user@example.com',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(
+                        0.5,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Member since ${_formatDate(user?.createdAt ?? DateTime.now())}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+              onPressed: () => _showEditProfileDialog(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar(BuildContext context, String name) {
+    final theme = Theme.of(context);
+    return Text(
+      _getInitials(name),
+      style: theme.textTheme.titleLarge?.copyWith(
+        color: theme.colorScheme.onPrimaryContainer,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
   String _getInitials(String name) {
     if (name.isEmpty) return '??';
     List<String> names = name.split(' ');
@@ -24,167 +179,89 @@ class SettingsScreen extends StatelessWidget {
     return '${names[0][0]}${names[1][0]}'.toUpperCase();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: Scaffold(
-        appBar: const CustomAppBar(title: 'Settings', showBackButton: false),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // // Profile Section with ProfileAvatar
-            // _buildProfileSection(context),
-            // const SizedBox(height: 24),
-            //
-            // // User Statistics Section with StatCards
-            // _buildUserStatsSection(context),
-            // const SizedBox(height: 24),
-            _buildSectionHeader(context, 'Appearance'),
-            const ThemeSelector(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader(context, 'Notifications'),
-            const NotificationSettings(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader(context, 'Habits'),
-            _buildHabitsSection(context),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader(context, 'Language'),
-            _buildLanguageSection(context),
-            const SizedBox(height: 24),
-
-            // _buildSectionHeader(context, 'Data'),
-            // const BackupRestore(),
-            // const SizedBox(height: 24),
-            _buildSectionHeader(context, 'About'),
-            _buildAboutSection(context),
-            const SizedBox(height: 24),
-
-            _buildResetSection(context),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader(context, 'Account'),
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                return ListTile(
-                  leading: Icon(Icons.logout, color: colorScheme.error),
-                  title: Text(
-                    'Sign Out',
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  subtitle: Text(
-                    authProvider.userEmail ?? '',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                  ),
-                  onTap: () => _showSignOutDialog(context),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.year}';
   }
 
   Widget _buildHabitsSection(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Consumer<SettingsProvider>(
       builder: (context, settingsProvider, child) {
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          color: theme.colorScheme.surface, // theme-aware background
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
-                  leading: Icon(
-                    Icons.calendar_today,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: Text(
-                    'Week Starts On',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    settingsProvider.weekStartsOnMonday ? 'Monday' : 'Sunday',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  trailing: Switch(
-                    value: settingsProvider.weekStartsOnMonday,
-                    onChanged:
-                        (value) => settingsProvider.toggleWeekStartsOnMonday(),
-                    activeColor: theme.colorScheme.primary,
+                Text(
+                  'Habits Configuration',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(
-                    Icons.local_fire_department,
-                    color: theme.colorScheme.primary,
+                const SizedBox(height: 16),
+
+                _buildSettingTile(
+                  context: context,
+                  icon: Icons.calendar_today,
+                  title: 'Week Starts On',
+                  subtitle:
+                      settingsProvider.weekStartsOnMonday ? 'Monday' : 'Sunday',
+                  trailing: Switch.adaptive(
+                    value: settingsProvider.weekStartsOnMonday,
+                    onChanged: (value) {
+                      settingsProvider.toggleWeekStartsOnMonday();
+                      _showFeedback(
+                        context,
+                        'Week now starts on ${value ? 'Monday' : 'Sunday'}',
+                      );
+                    },
                   ),
-                  title: Text(
-                    'Streak Goal',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${settingsProvider.streakGoal} days',
-                    style: theme.textTheme.bodySmall,
-                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                _buildSettingTile(
+                  context: context,
+                  icon: Icons.local_fire_department,
+                  title: 'Streak Goal',
+                  subtitle: '${settingsProvider.streakGoal} days',
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _showStreakGoalDialog(context, settingsProvider),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(
-                    Icons.settings_backup_restore,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: Text(
-                    'Auto Backup',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Automatically backup data',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  trailing: Switch(
+
+                const SizedBox(height: 16),
+
+                _buildSettingTile(
+                  context: context,
+                  icon: Icons.settings_backup_restore,
+                  title: 'Auto Backup',
+                  subtitle:
+                      settingsProvider.autoBackup
+                          ? 'Automatically backup data'
+                          : 'Manual backup only',
+                  trailing: Switch.adaptive(
                     value: settingsProvider.autoBackup,
-                    onChanged: (value) => settingsProvider.toggleAutoBackup(),
-                    activeColor: theme.colorScheme.primary,
+                    onChanged: (value) {
+                      settingsProvider.toggleAutoBackup();
+                      _showFeedback(
+                        context,
+                        value ? 'Auto backup enabled' : 'Auto backup disabled',
+                      );
+                    },
                   ),
                 ),
               ],
@@ -196,30 +273,34 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLanguageSection(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Consumer<SettingsProvider>(
       builder: (context, settingsProvider, child) {
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          color: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            leading: Icon(Icons.language, color: theme.colorScheme.primary),
-            title: Text(
-              'Language',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Language & Region',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildSettingTile(
+                  context: context,
+                  icon: Icons.language,
+                  title: 'App Language',
+                  subtitle: settingsProvider.getLanguageName(
+                    settingsProvider.language,
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _showLanguageDialog(context, settingsProvider),
+                ),
+              ],
             ),
-            subtitle: Text(
-              settingsProvider.getLanguageName(settingsProvider.language),
-              style: theme.textTheme.bodySmall,
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => _showLanguageDialog(context, settingsProvider),
           ),
         );
       },
@@ -227,223 +308,259 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildAboutSection(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Card(
-      color: theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Column(
-        children: [
-          _buildThemedTile(
-            context,
-            icon: Icons.info_outline,
-            title: 'App Version',
-            subtitle: '1.0.0',
-            onTap: () => _showVersionDialog(context),
-          ),
-          const Divider(height: 1),
-          _buildThemedTile(
-            context,
-            icon: Icons.help_outline,
-            title: 'Help & Support',
-            onTap: () => _showHelpDialog(context),
-          ),
-          const Divider(height: 1),
-          _buildThemedTile(
-            context,
-            icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
-            onTap: () => _showPrivacyDialog(context),
-          ),
-          const Divider(height: 1),
-          _buildThemedTile(
-            context,
-            icon: Icons.help_outline,
-            title: 'Show Onboarding',
-            subtitle: 'Replay the app introduction',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-              );
-            },
-          ),
-          const Divider(height: 1),
-          _buildThemedTile(
-            context,
-            icon: Icons.rate_review_outlined,
-            title: 'Rate App',
-            onTap: () => _showRateAppDialog(context),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'About & Support',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.info_outline,
+              title: 'App Version',
+              subtitle: '1.0.0',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showVersionDialog(context),
+            ),
+
+            const SizedBox(height: 8),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              subtitle: 'Get help using the app',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showHelpDialog(context),
+            ),
+
+            const SizedBox(height: 8),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+              subtitle: 'How we protect your data',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showPrivacyDialog(context),
+            ),
+
+            const SizedBox(height: 8),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.school_outlined,
+              title: 'Show Tutorial',
+              subtitle: 'Replay the app introduction',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 8),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.rate_review_outlined,
+              title: 'Rate & Review',
+              subtitle: 'Share your feedback',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showRateAppDialog(context),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildThemedTile(
-    BuildContext context, {
+  Widget _buildDangerZone(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_outlined,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Danger Zone',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.restart_alt,
+              title: 'Reset All Settings',
+              subtitle: 'Reset app to default configuration',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showResetDialog(context),
+              isDestructive: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context, AuthProvider authProvider) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Account',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            _buildSettingTile(
+              context: context,
+              icon: Icons.logout,
+              title: 'Sign Out',
+              subtitle: authProvider.userEmail ?? '',
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _showSignOutDialog(context),
+              isDestructive: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
-    String? subtitle,
-    required VoidCallback onTap,
+    required String subtitle,
+    required Widget trailing,
+    VoidCallback? onTap,
+    bool isDestructive = false,
   }) {
     final theme = Theme.of(context);
+    final iconColor =
+        isDestructive ? theme.colorScheme.error : theme.colorScheme.primary;
+    final titleColor =
+        isDestructive ? theme.colorScheme.error : theme.colorScheme.onSurface;
 
-    return ListTile(
-      leading: Icon(icon, color: theme.colorScheme.primary),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-      ),
-      subtitle:
-          subtitle != null
-              ? Text(subtitle, style: theme.textTheme.bodySmall)
-              : null,
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color:
+                    isDestructive
+                        ? theme.colorScheme.errorContainer.withOpacity(0.3)
+                        : theme.colorScheme.primaryContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: titleColor,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing,
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildResetSection(BuildContext context) {
+  void _showFeedback(
+    BuildContext context,
+    String message, {
+    bool isSuccess = true,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      color: theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        leading: Icon(Icons.restore, color: theme.colorScheme.error),
-        title: Text(
-          'Reset All Settings',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.error,
-            fontWeight: FontWeight.w600,
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Edit Profile'),
+            content: Text('Profile editing feature coming soon!'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Close'),
+              ),
+            ],
           ),
-        ),
-        subtitle: Text(
-          'Reset all settings to default values',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.textTheme.bodySmall?.color?.withOpacity(0.8),
-          ),
-        ),
-        onTap: () => _showResetDialog(context),
-      ),
     );
   }
 
-  // User Statistics Section with StatCards
-  // Widget _buildUserStatsSection(BuildContext context) {
-  //   return Consumer2<AuthProvider, HabitProvider>(
-  //     builder: (context, authProvider, habitProvider, child) {
-  //       final user = authProvider.currentUser;
-  //       return Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           _buildSectionHeader(context, 'Your Progress'),
-  //           const SizedBox(height: 12),
-  //           GridView.count(
-  //             crossAxisCount: 2,
-  //             shrinkWrap: true,
-  //             physics: const NeverScrollableScrollPhysics(),
-  //             mainAxisSpacing: 12,
-  //             crossAxisSpacing: 12,
-  //             childAspectRatio: 1.3,
-  //             children: [
-  //               StatCard(
-  //                 title: 'Total Habits',
-  //                 value: '${user?.totalHabits ?? habitProvider.habits.length}',
-  //                 icon: Icons.task_alt,
-  //                 color: Colors.blue,
-  //               ),
-  //               StatCard(
-  //                 title: 'Completed',
-  //                 value:
-  //                     '${user?.completedHabits ?? habitProvider.getTotalCompletedHabits()}',
-  //                 icon: Icons.check_circle,
-  //                 color: Colors.green,
-  //               ),
-  //               StatCard(
-  //                 title: 'Best Streak',
-  //                 value:
-  //                     '${user?.longestStreak ?? habitProvider.getLongestStreak()}',
-  //                 icon: Icons.local_fire_department,
-  //                 color: Colors.orange,
-  //               ),
-  //               StatCard(
-  //                 title: 'Days Active',
-  //                 value:
-  //                     '${_calculateDaysActive(user?.createdAt ?? DateTime.now())}',
-  //                 icon: Icons.calendar_today,
-  //                 color: Colors.purple,
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-  //
-  // Widget _buildProfileSection(BuildContext context) {
-  //   final colorScheme = Theme.of(context).colorScheme;
-  //   final textTheme = Theme.of(context).textTheme;
-  //
-  //   return Consumer<AuthProvider>(
-  //     builder: (context, authProvider, child) {
-  //       final user = authProvider.currentUser;
-  //       return Card(
-  //         color: colorScheme.surface,
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(20),
-  //           child: Row(
-  //             children: [
-  //               ProfileAvatar(
-  //                 imageUrl: user?.profilePicture,
-  //                 initials: _getInitials(user?.name ?? 'User'),
-  //                 size: 70,
-  //                 onTap: () => _showProfileOptions(context),
-  //               ),
-  //               const SizedBox(width: 16),
-  //               Expanded(
-  //                 child: Column(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   children: [
-  //                     Text(
-  //                       user?.name ?? 'User',
-  //                       style: textTheme.titleLarge?.copyWith(
-  //                         fontWeight: FontWeight.bold,
-  //                         color: colorScheme.onSurface,
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 4),
-  //                     Text(
-  //                       user?.email ?? 'user@example.com',
-  //                       style: textTheme.bodyMedium?.copyWith(
-  //                         color: colorScheme.onSurface.withOpacity(0.7),
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 8),
-  //                     Text(
-  //                       'Member since ${_formatDate(user?.createdAt ?? DateTime.now())}',
-  //                       style: textTheme.bodySmall?.copyWith(
-  //                         color: colorScheme.onSurface.withOpacity(0.5),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //               IconButton(
-  //                 icon: Icon(Icons.edit, color: colorScheme.primary),
-  //                 onPressed: () => _showProfileOptions(context),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
+  // Keep all your existing dialog methods but with improved styling
   Future<void> _showStreakGoalDialog(
     BuildContext context,
     SettingsProvider settingsProvider,
@@ -460,13 +577,7 @@ class SettingsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              backgroundColor: theme.colorScheme.surface,
-              title: Text(
-                'Set Streak Goal',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
+              title: Text('Set Streak Goal'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -486,26 +597,24 @@ class SettingsScreen extends StatelessWidget {
                         currentGoal = value.toInt();
                       });
                     },
-                    activeColor: theme.colorScheme.primary,
-                    inactiveColor: theme.colorScheme.primary.withOpacity(0.3),
                   ),
-                  Text('$currentGoal days', style: theme.textTheme.titleMedium),
+                  Text(
+                    '$currentGoal days',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: theme.colorScheme.onSurface),
-                  ),
+                  child: const Text('Cancel'),
                 ),
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context, currentGoal),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(color: theme.colorScheme.primary),
-                  ),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -516,12 +625,7 @@ class SettingsScreen extends StatelessWidget {
 
     if (result != null) {
       await settingsProvider.updateStreakGoal(result);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Streak goal updated to $result days'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showFeedback(context, 'Streak goal updated to $result days');
     }
   }
 
@@ -530,7 +634,6 @@ class SettingsScreen extends StatelessWidget {
     SettingsProvider settingsProvider,
   ) async {
     String selectedLanguage = settingsProvider.language;
-    final theme = Theme.of(context);
 
     final result = await showDialog<String>(
       context: context,
@@ -541,13 +644,7 @@ class SettingsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              backgroundColor: theme.colorScheme.surface,
-              title: Text(
-                'Select Language',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
+              title: const Text('Select Language'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -558,11 +655,7 @@ class SettingsScreen extends StatelessWidget {
                           groupValue: selectedLanguage,
                           title: Text(
                             settingsProvider.getLanguageName(langCode),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                            ),
                           ),
-                          activeColor: theme.colorScheme.primary,
                           onChanged: (value) {
                             setState(() {
                               selectedLanguage = value!;
@@ -575,17 +668,11 @@ class SettingsScreen extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: theme.colorScheme.onSurface),
-                  ),
+                  child: const Text('Cancel'),
                 ),
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context, selectedLanguage),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(color: theme.colorScheme.primary),
-                  ),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -596,20 +683,14 @@ class SettingsScreen extends StatelessWidget {
 
     if (result != null && result != settingsProvider.language) {
       await settingsProvider.updateLanguage(result);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Language changed to ${settingsProvider.getLanguageName(result)}',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+      _showFeedback(
+        context,
+        'Language changed to ${settingsProvider.getLanguageName(result)}',
       );
     }
   }
 
   Future<void> _showResetDialog(BuildContext context) async {
-    final theme = Theme.of(context);
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
@@ -617,31 +698,20 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
-            title: Text(
-              'Reset Settings',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            content: Text(
+            title: const Text('Reset Settings'),
+            content: const Text(
               'Are you sure you want to reset all settings to their default values? This action cannot be undone.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: theme.colorScheme.onSurface),
-                ),
+                child: const Text('Cancel'),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
                 ),
                 child: const Text('Reset'),
               ),
@@ -657,20 +727,12 @@ class SettingsScreen extends StatelessWidget {
       await settingsProvider.resetSettings();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Settings reset to default values'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: theme.colorScheme.surfaceVariant,
-          ),
-        );
+        _showFeedback(context, 'Settings reset to default values');
       }
     }
   }
 
   void _showSignOutDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder:
@@ -678,28 +740,14 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
-            title: Text(
-              'Sign Out',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            content: Text(
-              'Are you sure you want to sign out?',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            title: const Text('Sign Out'),
+            content: const Text('Are you sure you want to sign out?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: theme.colorScheme.onSurface),
-                ),
+                child: const Text('Cancel'),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   final authProvider = Provider.of<AuthProvider>(
@@ -715,20 +763,18 @@ class SettingsScreen extends StatelessWidget {
                     );
                   }
                 },
-                child: Text(
-                  'Sign Out',
-                  style: TextStyle(color: theme.colorScheme.error),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
                 ),
+                child: const Text('Sign Out'),
               ),
             ],
           ),
     );
   }
 
-  // Keep your existing dialog methods...
   void _showVersionDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder:
@@ -736,46 +782,24 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
-            title: Text(
-              'About Habit Tracker',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            content: Column(
+            title: const Text('About Habit Tracker'),
+            content: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Version: 1.0.0',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 8),
+                Text('Version: 1.0.0'),
+                SizedBox(height: 8),
                 Text(
                   'Build your better habits with our simple and intuitive habit tracker.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '© 2025 Habit Tracker App',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                SizedBox(height: 8),
+                Text('© 2025 Habit Tracker App'),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Close',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -783,8 +807,6 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showHelpDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder:
@@ -792,57 +814,42 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
             title: Row(
               children: [
-                Icon(Icons.help_outline, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Help & Support',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
+                Icon(
+                  Icons.help_outline,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
+                const SizedBox(width: 8),
+                const Text('Help & Support'),
               ],
             ),
-            content: Column(
+            content: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'How to use the app:',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   '• Tap the + button to add a new habit\n'
                   '• Tap on a habit to mark it as complete\n'
                   '• View your progress in the Statistics tab\n'
                   '• Long press on a habit to edit or delete it',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'For more help, contact us at support@habittracker.com',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontStyle: FontStyle.italic),
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Close',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -850,8 +857,6 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showPrivacyDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder:
@@ -859,47 +864,32 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
             title: Row(
               children: [
-                Icon(Icons.privacy_tip, color: Colors.green),
+                const Icon(Icons.privacy_tip, color: Colors.green),
                 const SizedBox(width: 8),
-                Text(
-                  'Privacy Policy',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
+                const Text('Privacy Policy'),
               ],
             ),
-            content: SingleChildScrollView(
+            content: const SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Your privacy is important to us.',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
                     '• All data is stored locally on your device\n'
                     '• We do not collect or share personal information\n'
                     '• Notifications are processed locally\n'
                     '• Analytics are anonymized and optional',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'For the full privacy policy, visit our website.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    style: TextStyle(fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -907,10 +897,7 @@ class SettingsScreen extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Close',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -918,8 +905,6 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showRateAppDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder:
@@ -927,64 +912,37 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: theme.colorScheme.surface,
             title: Row(
               children: [
                 const Icon(Icons.star_rate, color: Colors.orange),
                 const SizedBox(width: 8),
-                Text(
-                  'Rate Our App',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
+                const Text('Rate Our App'),
               ],
             ),
-            content: Text(
+            content: const Text(
               'Enjoying Habit Tracker? Please take a moment to rate us on the app store!',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Later',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: const Text('Later'),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-
-                  // Schedule the navigation & snackbar after the current frame
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const FeedbackScreen()),
                     );
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Thank you for your feedback!',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onInverseSurface,
-                          ),
-                        ),
-                        backgroundColor: theme.colorScheme.inverseSurface,
-                      ),
-                    );
+                    _showFeedback(context, 'Thank you for your feedback!');
                   });
                 },
-                child: Text(
-                  'Rate Now',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: const Text('Rate Now'),
               ),
             ],
           ),
     );
   }
 }
+
