@@ -18,7 +18,7 @@ class HabitCard extends StatelessWidget {
       builder: (context, habitProvider, child) {
         final streak = habitProvider.getHabitStreak(habit.id);
         final frequency = habit.frequency;
-        final isCompleted = habitProvider.isHabitCompletedToday(habit);
+        final isCompleted = habitProvider.isHabitCompletedToday(habit as String);
 
         // Calculate proper completion rate based on habit progress
         final completionRate = habitProvider.getHabitCompletionRate(habit.id);

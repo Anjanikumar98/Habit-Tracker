@@ -8,10 +8,37 @@ class AnalyticsService {
   // Cache frequently accessed data
   Map<String, dynamic>? _cachedStats;
   DateTime? _lastCacheUpdate;
+  static const Duration _cacheExpiry = Duration(minutes: 5);
 
   AnalyticsService._internal();
 
   final DatabaseService _databaseService = DatabaseService();
+
+  // Check if cache is valid
+  bool get _isCacheValid {
+    if (_cachedStats == null || _lastCacheUpdate == null) return false;
+    return DateTime.now()
+            .difference(_lastCacheUpdate!)
+            .compareTo(_cacheExpiry) <
+        0;
+  }
+
+  Future<Map<String, dynamic>> getOverallStatsWithCache() async {
+    if (_isCacheValid && _cachedStats != null) {
+      return _cachedStats!;
+    }
+
+    final stats = await getOverallStats();
+    _cachedStats = stats;
+    _lastCacheUpdate = DateTime.now();
+    return stats;
+  }
+
+  // Add method to clear cache when data changes
+  void clearCache() {
+    _cachedStats = null;
+    _lastCacheUpdate = null;
+  }
 
   // Overall Statistics
   Future<Map<String, dynamic>> getOverallStats() async {
@@ -95,19 +122,36 @@ class AnalyticsService {
     final completions = await _databaseService.getCompletionsByHabit(habitId);
     if (completions.isEmpty) return 0;
 
-    completions.sort((a, b) => b.date.compareTo(a.date));
+    // Sort by date descending
+    final sortedCompletions =
+        completions.where((c) => c.isCompleted).toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
+
+    if (sortedCompletions.isEmpty) return 0;
 
     int streak = 0;
-    DateTime currentDate = DateTime.now();
+    DateTime checkDate = DateTime.now();
 
-    for (final completion in completions) {
-      final completionDate = DateTime.parse(completion.date as String);
-      final daysDiff = currentDate.difference(completionDate).inDays;
+    // Start from today and work backwards
+    for (int i = 0; i < 365; i++) {
+      final targetDate = DateTime(
+        checkDate.year,
+        checkDate.month,
+        checkDate.day,
+      ).subtract(Duration(days: i));
 
-      if (daysDiff == streak && completion.isCompleted) {
+      final hasCompletion = sortedCompletions.any(
+        (c) =>
+            c.date.year == targetDate.year &&
+            c.date.month == targetDate.month &&
+            c.date.day == targetDate.day,
+      );
+
+      if (hasCompletion) {
         streak++;
-        currentDate = completionDate;
-      } else if (daysDiff > streak) {
+      } else {
+        // If it's the first day we're checking and no completion, streak is 0
+        // If we've already found some completions, break the streak
         break;
       }
     }
@@ -173,20 +217,25 @@ class AnalyticsService {
       final date = startOfWeek.add(Duration(days: i));
       final dateStr = date.toIso8601String().split('T')[0];
 
-      // final dayCompletions =
-      //     completions
-      //         .where((c) => c.date.startsWith(dateStr) && c.isCompleted)
-      //         .length;
+      // FIXED: Uncommented and corrected the completion counting
+      final dayCompletions =
+          completions
+              .where(
+                (c) =>
+                    c.date.toIso8601String().startsWith(dateStr) &&
+                    c.isCompleted,
+              )
+              .length;
 
-      // dailyProgress[dateStr] = {
-      //   'date': date,
-      //   'completions': dayCompletions,
-      //   'totalHabits': activeHabits.length,
-      //   'completionRate':
-      //       activeHabits.isNotEmpty
-      //           ? dayCompletions / activeHabits.length
-      //           : 0.0,
-      // };
+      dailyProgress[dateStr] = {
+        'date': date,
+        'completions': dayCompletions,
+        'totalHabits': activeHabits.length,
+        'completionRate':
+            activeHabits.isNotEmpty
+                ? dayCompletions / activeHabits.length
+                : 0.0,
+      };
     }
 
     final weeklyCompletions = completions.where((c) => c.isCompleted).length;
@@ -225,20 +274,25 @@ class AnalyticsService {
       final date = DateTime(now.year, now.month, day);
       final dateStr = date.toIso8601String().split('T')[0];
 
-      // final dayCompletions =
-      //     completions
-      //         .where((c) => c.date.startsWith(dateStr) && c.isCompleted)
-      //         .length;
+      // FIXED: Uncommented and corrected the completion counting
+      final dayCompletions =
+          completions
+              .where(
+                (c) =>
+                    c.date.toIso8601String().startsWith(dateStr) &&
+                    c.isCompleted,
+              )
+              .length;
 
-      // dailyProgress[dateStr] = {
-      //   'date': date,
-      //   'completions': dayCompletions,
-      //   'totalHabits': activeHabits.length,
-      //   'completionRate':
-      //       activeHabits.isNotEmpty
-      //           ? dayCompletions / activeHabits.length
-      //           : 0.0,
-      // };
+      dailyProgress[dateStr] = {
+        'date': date,
+        'completions': dayCompletions,
+        'totalHabits': activeHabits.length,
+        'completionRate':
+            activeHabits.isNotEmpty
+                ? dayCompletions / activeHabits.length
+                : 0.0,
+      };
     }
 
     final monthlyCompletions = completions.where((c) => c.isCompleted).length;
@@ -454,7 +508,7 @@ class AnalyticsService {
           'habitId': habit.id,
           'habitName': habit.name,
           'message':
-              'Congratulations! You have a ${currentStreak}-day streak for "${habit.name}".',
+              'Congratulations! You have a $currentStreak-day streak for "${habit.name}".',
           'severity': 'positive',
           'suggestion': 'You\'re forming a strong habit! Keep up the momentum.',
         });
@@ -650,3 +704,4 @@ class AnalyticsService {
     return difficultyAnalysis;
   }
 }
+

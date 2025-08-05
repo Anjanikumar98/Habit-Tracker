@@ -1,12 +1,18 @@
 import 'dart:async';
-
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/services/analytics_service.dart';
+import 'package:habit_tracker/services/notification_service.dart';
 import '../models/habit.dart';
 import '../models/habit_completion.dart';
 import '../services/database_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
+  final AnalyticsService _analyticsService = AnalyticsService();
+  final NotificationService _notificationService = NotificationService();
+  // final _uuid = Uuid();
+
   List<Habit> _habits = [];
   List<HabitCompletion> _completions = [];
   bool _isLoading = false;
@@ -20,6 +26,11 @@ class HabitProvider extends ChangeNotifier {
   Timer? _refreshTimer;
   StreamSubscription? _dbSubscription;
 
+  Future<void> initialize() async {
+    await loadHabits();
+    await loadCompletions();
+  }
+
   @override
   void dispose() {
     _refreshTimer?.cancel();
@@ -29,15 +40,25 @@ class HabitProvider extends ChangeNotifier {
 
   HabitProvider() {
     loadHabits();
+    _startPeriodicRefresh();
+  }
+
+  void _startPeriodicRefresh() {
+    _refreshTimer = Timer.periodic(Duration(minutes: 5), (_) {
+      loadHabits();
+    });
   }
 
   // Check if habit is completed today
-  bool isHabitCompletedToday(Habit habit) {
+  bool isHabitCompletedToday(String habitId) {
     final today = DateTime.now();
-    return habit.completedDates.any(
-      (d) =>
-          d.year == today.year && d.month == today.month && d.day == today.day,
-    );
+    return _completions.any((completion) {
+      return completion.habitId == habitId &&
+          completion.date.year == today.year &&
+          completion.date.month == today.month &&
+          completion.date.day == today.day &&
+          completion.isCompleted;
+    });
   }
 
   double getCompletionRate(Habit habit) {
@@ -68,10 +89,30 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 
+  // Load completions from database
+  Future<void> loadCompletions() async {
+    try {
+      _completions = await _databaseService.getCompletions();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading completions: $e');
+    }
+  }
+
   Future<void> addHabit(Habit habit) async {
     try {
       final newHabit = await _databaseService.insertHabit(habit);
       _habits.add(newHabit);
+
+      // Schedule notifications if habit has reminder
+      if (newHabit.hasReminder && newHabit.reminderTime != null) {
+        await _notificationService.scheduleSpecificHabitReminder(
+          newHabit,
+          newHabit.reminderTime!,
+        );
+      }
+
+      _analyticsService.clearCache();
       notifyListeners();
     } catch (e) {
       _error = 'Failed to add habit: $e';
@@ -84,7 +125,20 @@ class HabitProvider extends ChangeNotifier {
       await _databaseService.updateHabit(habit);
       final index = _habits.indexWhere((h) => h.id == habit.id);
       if (index != -1) {
+        final oldHabit = _habits[index];
         _habits[index] = habit;
+
+        // Update notifications if reminder changed
+        if (oldHabit.reminderTime != habit.reminderTime) {
+          await _notificationService.cancelHabitReminder(habit.id);
+          if (habit.hasReminder && habit.reminderTime != null) {
+            await _notificationService.scheduleSpecificHabitReminder(
+              habit,
+              habit.reminderTime!,
+            );
+          }
+        }
+        _analyticsService.clearCache();
         notifyListeners();
       }
     } catch (e) {
@@ -98,6 +152,11 @@ class HabitProvider extends ChangeNotifier {
       await _databaseService.deleteHabit(habitId);
       _habits.removeWhere((h) => h.id == habitId);
       _completions.removeWhere((c) => c.habitId == habitId);
+
+      // Cancel associated notifications
+      await _notificationService.cancelHabitReminder(habitId);
+
+      _analyticsService.clearCache();
       notifyListeners();
     } catch (e) {
       _error = 'Failed to delete habit: $e';
@@ -105,47 +164,114 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> toggleHabitCompletion(String habitId, DateTime date) async {
+  Future<Map<String, dynamic>> getAnalytics() async {
     try {
-      final existingCompletion = _completions.firstWhere(
-        (c) => c.habitId == habitId && isSameDay(c.date, date),
-        orElse:
-            () => HabitCompletion(
-              id: '',
-              habitId: habitId,
-              date: date,
-              isCompleted: false,
-            ),
-      );
+      return await _analyticsService.getOverallStatsWithCache();
+    } catch (e) {
+      print('Error getting analytics: $e');
+      return {};
+    }
+  }
 
-      if (existingCompletion.id.isEmpty) {
-        // Create new completion
-        final newCompletion = HabitCompletion(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          habitId: habitId,
-          date: date,
-          isCompleted: true,
-        );
-        await _databaseService.insertCompletion(newCompletion);
-        _completions.add(newCompletion);
-      } else {
+  Future<Map<String, dynamic>> getStreakAnalytics() async {
+    try {
+      return await _analyticsService.getStreakAnalytics();
+    } catch (e) {
+      print('Error getting streak analytics: $e');
+      return {};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getHabitInsights() async {
+    try {
+      return await _analyticsService.getHabitInsights();
+    } catch (e) {
+      print('Error getting habit insights: $e');
+      return [];
+    }
+  }
+
+  Future<void> batchUpdateCompletions(List<HabitCompletion> completions) async {
+    try {
+      await _databaseService.batchUpdateCompletions(completions);
+      await loadHabits(); // Refresh data
+      _analyticsService.clearCache();
+    } catch (e) {
+      _error = 'Failed to batch update completions: $e';
+      notifyListeners();
+    }
+  }
+
+  List<Habit> getTodaysActiveHabits() {
+    final today = DateTime.now();
+    return _habits.where((habit) {
+      if (!habit.isActive) return false;
+      return habit.shouldShowToday(today);
+    }).toList();
+  }
+
+  // Get completion statistics
+  Map<String, dynamic> getTodayStats() {
+    final todaysHabits = getTodaysActiveHabits();
+    final completedToday =
+        todaysHabits
+            .where((h) => isHabitCompletedOnDate(h.id, DateTime.now()))
+            .length;
+
+    return {
+      'totalHabits': todaysHabits.length,
+      'completedHabits': completedToday,
+      'completionRate':
+          todaysHabits.isNotEmpty ? completedToday / todaysHabits.length : 0.0,
+      'remainingHabits': todaysHabits.length - completedToday,
+    };
+  }
+
+  Future<void> toggleHabitCompletion(String habitId, DateTime dateTime) async {
+    try {
+      final today = DateTime.now();
+      final existingCompletion = await _databaseService
+          .getCompletionByHabitAndDate(habitId, today);
+
+      if (existingCompletion != null) {
         // Update existing completion
         final updatedCompletion = existingCompletion.copyWith(
           isCompleted: !existingCompletion.isCompleted,
         );
         await _databaseService.updateCompletion(updatedCompletion);
+
+        // Update local list
         final index = _completions.indexWhere(
           (c) => c.id == existingCompletion.id,
         );
         if (index != -1) {
           _completions[index] = updatedCompletion;
         }
+      } else {
+        // Create new completion
+        final newCompletion = HabitCompletion(
+          id: generateCustomId(),
+          habitId: habitId,
+          date: today,
+          isCompleted: true,
+        );
+        await _databaseService.insertCompletion(newCompletion);
+        _completions.add(newCompletion);
       }
+
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to update completion: $e';
-      notifyListeners();
+      debugPrint('Error toggling habit completion: $e');
+      rethrow;
     }
+  }
+
+  String generateCustomId() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final randomPart = Random().nextInt(
+      1000000,
+    ); // You can increase digits if needed
+    return '$timestamp-$randomPart';
   }
 
   bool isHabitCompletedOnDate(String habitId, DateTime date) {
@@ -157,7 +283,9 @@ class HabitProvider extends ChangeNotifier {
   // Add these methods to your HabitProvider class
   int getCompletedTodayCount() {
     final today = DateTime.now();
-    return habits.where((habit) => isHabitCompletedToday(habit)).length;
+    return habits
+        .where((habit) => isHabitCompletedToday(habit as String))
+        .length;
   }
 
   int getLongestStreak() {
@@ -168,11 +296,17 @@ class HabitProvider extends ChangeNotifier {
   }
 
   double getOverallSuccessRate() {
-    if (habits.isEmpty) return 0.0;
-    final totalRate = habits
-        .map((habit) => getHabitCompletionRate(habit.id))
-        .reduce((sum, rate) => sum + rate);
-    return totalRate / habits.length;
+    if (_habits.isEmpty) return 0.0;
+
+    final totalExpected = _habits.length * 30; // Last 30 days
+    final totalCompleted =
+        _completions.where((completion) {
+          final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+          return completion.date.isAfter(thirtyDaysAgo) &&
+              completion.isCompleted;
+        }).length;
+
+    return totalExpected > 0 ? totalCompleted / totalExpected : 0.0;
   }
 
   int getCurrentStreak() {
@@ -223,8 +357,14 @@ class HabitProvider extends ChangeNotifier {
     return completions / days;
   }
 
+  // Get completions for specific habit
+  List<HabitCompletion> getHabitCompletions(String habitId) {
+    return _completions.where((c) => c.habitId == habitId).toList();
+  }
+
+  // Get habits by category
   List<Habit> getHabitsByCategory(String category) {
-    return _habits.where((h) => h.category == category).toList();
+    return _habits.where((habit) => habit.category == category).toList();
   }
 
   List<Habit> getTodaysHabits() {
@@ -302,3 +442,4 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 }
+

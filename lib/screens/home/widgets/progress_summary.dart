@@ -14,7 +14,7 @@ class ProgressSummary extends StatelessWidget {
       builder: (context, habitProvider, child) {
         final habits = habitProvider.habits;
         final completedToday =
-            habits.where((h) => habitProvider.isHabitCompletedToday(h)).length;
+            habits.where((h) => habitProvider.isHabitCompletedToday(h as String)).length;
         final totalHabits = habits.length;
         final progress = totalHabits > 0 ? completedToday / totalHabits : 0.0;
 

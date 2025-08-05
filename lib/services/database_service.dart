@@ -396,5 +396,117 @@ class DatabaseService {
     final db = await database;
     await db.close();
   }
-}
 
+  Future<List<Habit>> getActiveHabits() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'habits',
+      where: 'is_active = ?',
+      whereArgs: [1],
+      orderBy: 'priority DESC, created_at DESC',
+    );
+
+    return List.generate(maps.length, (i) => Habit.fromMap(maps[i]));
+  }
+
+  Future<List<HabitCompletion>> getTodayCompletions() async {
+    final db = await database;
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    final List<Map<String, dynamic>> maps = await db.query(
+      'habit_completions',
+      where: 'date LIKE ? AND is_completed = 1',
+      whereArgs: ['$today%'],
+    );
+
+    return List.generate(maps.length, (i) => HabitCompletion.fromMap(maps[i]));
+  }
+
+  Future<int> getActiveHabitsCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM habits WHERE is_active = 1',
+    );
+    return result.first['count'] as int;
+  }
+
+  Future<List<HabitCompletion>> getCompletionsByHabitAndDateRange(
+    String habitId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'habit_completions',
+      where: 'habit_id = ? AND date >= ? AND date <= ?',
+      whereArgs: [
+        habitId,
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ],
+      orderBy: 'date DESC',
+    );
+
+    return List.generate(maps.length, (i) => HabitCompletion.fromMap(maps[i]));
+  }
+
+  // Method to get completion rate for a specific period
+  Future<double> getHabitCompletionRate(String habitId, {int days = 30}) async {
+    final db = await database;
+    final startDate = DateTime.now().subtract(Duration(days: days));
+
+    final totalDaysResult = await db.rawQuery(
+      '''SELECT COUNT(DISTINCT DATE(date)) as total_days 
+         FROM habit_completions 
+         WHERE habit_id = ? AND date >= ?''',
+      [habitId, startDate.toIso8601String()],
+    );
+
+    final completedDaysResult = await db.rawQuery(
+      '''SELECT COUNT(DISTINCT DATE(date)) as completed_days 
+         FROM habit_completions 
+         WHERE habit_id = ? AND date >= ? AND is_completed = 1''',
+      [habitId, startDate.toIso8601String()],
+    );
+
+    final totalDays = totalDaysResult.first['total_days'] as int;
+    final completedDays = completedDaysResult.first['completed_days'] as int;
+
+    return totalDays > 0 ? completedDays / totalDays : 0.0;
+  }
+
+  // Batch operations for better performance
+  Future<void> batchInsertCompletions(List<HabitCompletion> completions) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final completion in completions) {
+        batch.insert('habit_completions', completion.toMap());
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  Future<void> optimizeDatabase() async {
+    final db = await database;
+    await db.execute('VACUUM');
+    await db.execute('REINDEX');
+  }
+
+  Future<Map<String, dynamic>> getDatabaseStats() async {
+    final db = await database;
+    final habitsCount = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM habits',
+    );
+    final completionsCount = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM habit_completions',
+    );
+    final dbPath = db.path;
+
+    return {
+      'totalHabits': habitsCount.first['count'],
+      'totalCompletions': completionsCount.first['count'],
+      'databasePath': dbPath,
+      'lastOptimized': DateTime.now().toIso8601String(),
+    };
+  }
+}
