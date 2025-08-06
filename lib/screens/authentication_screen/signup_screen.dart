@@ -229,6 +229,9 @@ class _SignUpScreenState extends State<SignUpScreen>
   }
 
   Future<void> _showSuccessDialog() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -261,15 +264,13 @@ class _SignUpScreenState extends State<SignUpScreen>
               children: [
                 Text(
                   'Your account has been created successfully.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Get ready to build amazing habits!',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -332,6 +333,9 @@ class _SignUpScreenState extends State<SignUpScreen>
   }
 
   void _showTermsDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     showDialog(
       context: context,
       builder:
@@ -363,7 +367,7 @@ We reserve the right to modify these terms at any time.
 We may terminate your account if you violate these terms.
 
 For complete terms, visit our website.''',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: textTheme.bodySmall,
                 ),
               ),
             ),
@@ -378,6 +382,9 @@ For complete terms, visit our website.''',
   }
 
   void _showPrivacyDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     showDialog(
       context: context,
       builder:
@@ -413,7 +420,7 @@ You can access, update, or delete your personal information.
 For privacy questions, contact us through the app.
 
 For complete policy, visit our website.''',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: textTheme.bodySmall,
                 ),
               ),
             ),
@@ -429,8 +436,9 @@ For complete policy, visit our website.''',
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -474,18 +482,17 @@ For complete policy, visit our website.''',
                                 color: Colors.transparent,
                                 child: Text(
                                   'Create Account',
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
+                                  style: textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Start your habit-building journey today',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurface.withOpacity(0.7),
                               ),
                               textAlign: TextAlign.center,
@@ -566,7 +573,7 @@ For complete policy, visit our website.''',
                                   const SizedBox(width: 12),
                                   Text(
                                     _passwordStrengthText,
-                                    style: theme.textTheme.bodySmall?.copyWith(
+                                    style: textTheme.bodySmall?.copyWith(
                                       color: _passwordStrengthColor,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -643,7 +650,7 @@ For complete policy, visit our website.''',
                                     _passwordStrength > 0.7
                                         ? 'Strong Password ✓'
                                         : 'Password Requirements',
-                                    style: theme.textTheme.bodySmall?.copyWith(
+                                    style: textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color:
                                           _passwordStrength > 0.7
@@ -669,11 +676,10 @@ For complete policy, visit our website.''',
                                         const SizedBox(width: 8),
                                         Text(
                                           requirement,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: colorScheme.onSurface
-                                                    .withOpacity(0.7),
-                                              ),
+                                          style: textTheme.bodySmall?.copyWith(
+                                            color: colorScheme.onSurface
+                                                .withOpacity(0.7),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -684,7 +690,7 @@ For complete policy, visit our website.''',
                                 const SizedBox(height: 8),
                                 Text(
                                   'Your password meets all security requirements',
-                                  style: theme.textTheme.bodySmall?.copyWith(
+                                  style: textTheme.bodySmall?.copyWith(
                                     color: Colors.green,
                                   ),
                                 ),
@@ -728,7 +734,7 @@ For complete policy, visit our website.''',
                                     },
                                     child: RichText(
                                       text: TextSpan(
-                                        style: theme.textTheme.bodySmall,
+                                        style: textTheme.bodySmall,
                                         children: [
                                           const TextSpan(
                                             text: 'I agree to the ',
@@ -803,11 +809,10 @@ For complete policy, visit our website.''',
                                     },
                                     child: Text(
                                       'I would like to receive tips and updates about habit building (optional)',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurface
-                                                .withOpacity(0.8),
-                                          ),
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurface
+                                            .withOpacity(0.8),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -838,7 +843,7 @@ For complete policy, visit our website.''',
                           children: [
                             Text(
                               'Already have an account? ',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurface.withOpacity(0.8),
                               ),
                             ),
