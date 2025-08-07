@@ -118,7 +118,7 @@ class _HabitFormState extends State<HabitForm> {
         hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.edit, color: colorScheme.primary),
         filled: true,
-        fillColor: colorScheme.surfaceVariant,
+        fillColor: colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outline),
@@ -167,7 +167,7 @@ class _HabitFormState extends State<HabitForm> {
         hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.description, color: colorScheme.primary),
         filled: true,
-        fillColor: colorScheme.surfaceVariant,
+        fillColor: colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outline),
@@ -210,7 +210,7 @@ class _HabitFormState extends State<HabitForm> {
         hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
         prefixIcon: Icon(Icons.category, color: colorScheme.primary),
         filled: true,
-        fillColor: colorScheme.surfaceVariant,
+        fillColor: colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outline),
@@ -329,7 +329,7 @@ class _HabitFormState extends State<HabitForm> {
     return Card(
       margin: const EdgeInsets.only(top: 4),
       shape: theme.cardTheme.shape,
-      color: colorScheme.surfaceVariant,
+      color: colorScheme.surfaceContainerHighest,
       elevation: theme.cardTheme.elevation,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -429,10 +429,12 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   void _showSnackBar(BuildContext context, String message) {
+    final theme = Theme.of(context);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: theme.colorScheme.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );

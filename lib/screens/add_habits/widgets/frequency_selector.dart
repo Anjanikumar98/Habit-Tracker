@@ -6,10 +6,10 @@ class FrequencySelector extends StatelessWidget {
   final Function(String) onFrequencyChanged;
 
   const FrequencySelector({
-    Key? key,
+    super.key,
     required this.selectedFrequency,
     required this.onFrequencyChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class FrequencySelector extends StatelessWidget {
                     }
                   },
                   selectedColor: colorScheme.primary,
-                  backgroundColor: colorScheme.surfaceVariant,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(

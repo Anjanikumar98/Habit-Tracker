@@ -4,8 +4,7 @@ class StreakBadge extends StatelessWidget {
   final int streak;
   final bool isActive;
 
-  const StreakBadge({Key? key, required this.streak, required this.isActive})
-    : super(key: key);
+  const StreakBadge({super.key, required this.streak, required this.isActive});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +32,9 @@ class StreakBadge extends StatelessWidget {
               size: 14,
               semanticLabel: 'Flame icon for streak',
             ),
+
             const SizedBox(width: 4),
+
             Text(
               '$streak',
               style: theme.textTheme.labelSmall?.copyWith(

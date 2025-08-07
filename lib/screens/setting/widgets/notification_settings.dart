@@ -137,7 +137,7 @@ class NotificationSettings extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.surfaceVariant.withOpacity(0.5),
+                      ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(

@@ -6,7 +6,7 @@ import '../../../providers/habit_provider.dart';
 class HabitStats extends StatelessWidget {
   final Habit habit;
 
-  const HabitStats({Key? key, required this.habit}) : super(key: key);
+  const HabitStats({super.key, required this.habit});
 
   @override
   Widget build(BuildContext context) {

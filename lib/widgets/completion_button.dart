@@ -6,11 +6,11 @@ class CompletionButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const CompletionButton({
-    Key? key,
+    super.key,
     required this.isCompleted,
     required this.color,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

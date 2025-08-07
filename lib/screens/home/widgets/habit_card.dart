@@ -10,7 +10,7 @@ import '../../habits_detail/habit_detail_screen.dart';
 class HabitCard extends StatelessWidget {
   final Habit habit;
 
-  const HabitCard({Key? key, required this.habit}) : super(key: key);
+  const HabitCard({super.key, required this.habit});
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +154,7 @@ class HabitCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceVariant,
+                          color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

@@ -218,7 +218,7 @@ class CategoryBreakdown extends StatelessWidget {
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: completionRate,
-                      backgroundColor: theme.colorScheme.surfaceVariant,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                     const SizedBox(height: 4),

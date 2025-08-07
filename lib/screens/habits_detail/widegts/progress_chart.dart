@@ -5,7 +5,7 @@ import '../../../models/habit.dart';
 class ProgressChart extends StatefulWidget {
   final Habit habit;
 
-  const ProgressChart({Key? key, required this.habit}) : super(key: key);
+  const ProgressChart({super.key, required this.habit});
 
   @override
   State<ProgressChart> createState() => _ProgressChartState();
@@ -421,7 +421,7 @@ class _ProgressChartState extends State<ProgressChart> {
   Widget _buildChartLegend(BuildContext context) {
     final theme = Theme.of(context);
 
-    Widget _buildLegendDot(Color color, String label) {
+    Widget buildLegendDot(Color color, String label) {
       return Row(
         children: [
           Container(
@@ -454,9 +454,9 @@ class _ProgressChartState extends State<ProgressChart> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildLegendDot(theme.colorScheme.primary, 'Completed'),
+              buildLegendDot(theme.colorScheme.primary, 'Completed'),
               const SizedBox(width: 24),
-              _buildLegendDot(theme.colorScheme.error, 'Missed'),
+              buildLegendDot(theme.colorScheme.error, 'Missed'),
             ],
           ),
           const SizedBox(height: 8),

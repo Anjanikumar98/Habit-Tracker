@@ -14,7 +14,7 @@ class QuickAddHabit extends StatelessWidget {
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: colorScheme.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         child: ListTile(
           leading: Icon(Icons.add_circle_outline, color: colorScheme.primary),
           title: Text(

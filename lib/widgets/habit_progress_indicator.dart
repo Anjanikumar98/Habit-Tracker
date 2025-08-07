@@ -6,11 +6,11 @@ class HabitProgressIndicator extends StatelessWidget {
   final String label;
 
   const HabitProgressIndicator({
-    Key? key,
+    super.key,
     required this.progress,
     required this.color,
     required this.label,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,7 @@ class HabitProgressIndicator extends StatelessWidget {
           value: '${(clampedProgress * 100).toInt()}%',
           child: LinearProgressIndicator(
             value: clampedProgress,
-            backgroundColor: colorScheme.surfaceVariant,
+            backgroundColor: colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation(color),
           ),
         ),

@@ -209,22 +209,22 @@ class NotificationService {
     String emoji;
 
     if (streak >= 100) {
-      message = 'Incredible! ${streak} days in a row!';
+      message = 'Incredible! $streak days in a row!';
       emoji = '🏆';
     } else if (streak >= 50) {
-      message = 'Amazing! ${streak} days in a row!';
+      message = 'Amazing! $streak days in a row!';
       emoji = '🔥';
     } else if (streak >= 30) {
-      message = 'Fantastic! ${streak} days in a row!';
+      message = 'Fantastic! $streak days in a row!';
       emoji = '⭐';
     } else if (streak >= 21) {
-      message = 'Great! ${streak} days in a row!';
+      message = 'Great! $streak days in a row!';
       emoji = '💪';
     } else if (streak >= 7) {
-      message = 'One week streak! ${streak} days in a row!';
+      message = 'One week streak! $streak days in a row!';
       emoji = '🎯';
     } else {
-      message = '${streak} days in a row!';
+      message = '$streak days in a row!';
       emoji = '✨';
     }
 

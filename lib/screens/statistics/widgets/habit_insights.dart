@@ -151,7 +151,7 @@ class HabitInsights extends StatelessWidget {
         'type': 'consistency',
         'title': 'Consistency Champion',
         'description':
-            '${consistentHabit.name} has a ${streak}-day streak! Keep it up!',
+            '${consistentHabit.name} has a $streak-day streak! Keep it up!',
         'icon': Icons.local_fire_department,
         'color': Colors.orange,
       });

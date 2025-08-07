@@ -92,7 +92,7 @@ class SettingsProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to update settings: $e');
-      throw e; // Re-throw to let UI handle the error
+      rethrow; // Re-throw to let UI handle the error
     }
   }
 

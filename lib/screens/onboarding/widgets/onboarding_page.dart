@@ -6,8 +6,7 @@ class OnboardingPage extends StatefulWidget {
   final OnboardingPageData data;
   final bool isActive;
 
-  const OnboardingPage({Key? key, required this.data, required this.isActive})
-    : super(key: key);
+  const OnboardingPage({super.key, required this.data, required this.isActive});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();

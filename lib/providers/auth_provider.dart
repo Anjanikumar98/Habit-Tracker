@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:habit_tracker/models/users.dart';
 import 'package:habit_tracker/services/auth_services.dart';

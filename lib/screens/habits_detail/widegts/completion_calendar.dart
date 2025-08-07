@@ -5,7 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 class CompletionCalendar extends StatefulWidget {
   final Habit habit;
 
-  const CompletionCalendar({Key? key, required this.habit}) : super(key: key);
+  const CompletionCalendar({super.key, required this.habit});
 
   @override
   State<CompletionCalendar> createState() => _CompletionCalendarState();
@@ -236,7 +236,7 @@ class _CompletionCalendarState extends State<CompletionCalendar> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
