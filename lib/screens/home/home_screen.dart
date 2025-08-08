@@ -42,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -145,43 +144,56 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Quick Stats Section - Added here
+                // Quick Stats Section
                 _buildQuickStats(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // Motivation Card
+                // Enhanced Motivation Card - Now more prominent
                 const MotivationCard(),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
 
                 // Progress Summary
                 const ProgressSummary(),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Quick Add Habit
                 const QuickAddHabit(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Section Header for Habits
                 if (habitProvider.habits.isNotEmpty) ...[
-                  Text(
-                    'Your Habits',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Your Habits',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        '${habitProvider.habits.length} habit${habitProvider.habits.length != 1 ? 's' : ''}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                 ],
 
                 // Habit Cards
-                ...habitProvider.habits
-                    .map(
-                      (habit) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: HabitCard(habit: habit),
-                      ),
-                    )
-                    ,
+                ...habitProvider.habits.map(
+                  (habit) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: HabitCard(habit: habit),
+                  ),
+                ),
+
+                // Bottom spacing for better scrolling experience
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -190,30 +202,69 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Quick stats section using StatCard widgets
+  // Enhanced quick stats section
   Widget _buildQuickStats() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Consumer<HabitProvider>(
       builder: (context, habitProvider, child) {
+        final completedToday = habitProvider.getCompletedTodayCount();
+        final totalHabits = habitProvider.habits.length;
+        final currentStreak = habitProvider.getCurrentStreak();
+        final completionRate =
+            totalHabits > 0 ? (completedToday / totalHabits) : 0.0;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Today\'s Progress',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Today\'s Progress',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                if (totalHabits > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          completionRate >= 1.0
+                              ? Colors.green.withOpacity(0.15)
+                              : Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${(completionRate * 100).round()}% Complete',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color:
+                            completionRate >= 1.0
+                                ? Colors.green.shade700
+                                : colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: StatCard(
-                    title: 'Completed',
-                    value:
-                        '${habitProvider.getCompletedTodayCount()}/${habitProvider.habits.length}',
+                    title: 'Completed Today',
+                    value: '$completedToday/$totalHabits',
                     icon: Icons.today,
-                    color: Colors.green,
+                    color:
+                        completedToday == totalHabits && totalHabits > 0
+                            ? Colors.green
+                            : Colors.blue,
                     onTap: () {
                       // Optional: Navigate to today's habits view
                     },
@@ -223,11 +274,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: StatCard(
                     title: 'Current Streak',
-                    value: '${habitProvider.getCurrentStreak()}',
+                    value: '$currentStreak day${currentStreak != 1 ? 's' : ''}',
                     icon: Icons.local_fire_department,
-                    color: Colors.orange,
+                    color:
+                        currentStreak >= 7
+                            ? Colors.orange
+                            : currentStreak >= 3
+                            ? Colors.amber
+                            : Colors.grey,
                     onTap: () {
-                      // Optional: Navigate to streak details
                       setState(() => _currentIndex = 1); // Go to Statistics
                     },
                   ),
