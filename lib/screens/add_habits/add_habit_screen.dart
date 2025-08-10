@@ -8,8 +8,16 @@ class AddHabitScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Add New Habit'),
-      body: const HabitForm(),
+      appBar: const CustomAppBar(
+        title: 'Add New Habit',
+      ),
+      body: const SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16.0), // Better spacing for small screens
+          child: HabitForm(),
+        ),
+      ),
+      backgroundColor: Colors.grey[50],
     );
   }
 }

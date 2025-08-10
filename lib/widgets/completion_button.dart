@@ -14,34 +14,39 @@ class CompletionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color effectiveColor = color;
-    final Color borderColor = isCompleted ? effectiveColor : Colors.grey.shade500;
-    final Color iconColor = isCompleted ? Colors.white : Colors.grey.shade600;
+    final borderColor = isCompleted ? color : Colors.grey.shade500;
+    final iconColor = isCompleted ? Colors.white : Colors.grey.shade600;
 
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: const CircleBorder(),
-        child: AnimatedContainer(
+    return InkWell(
+      onTap: onPressed,
+      customBorder: const CircleBorder(),
+      splashColor: color.withOpacity(0.2),
+      highlightColor: Colors.transparent,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isCompleted ? color : Colors.transparent,
+          border: Border.all(color: borderColor, width: 2),
+          shape: BoxShape.circle,
+          boxShadow:
+              isCompleted
+                  ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : [],
+        ),
+        child: AnimatedScale(
+          scale: isCompleted ? 1.1 : 1.0,
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: isCompleted ? effectiveColor : Colors.transparent,
-            border: Border.all(
-              color: borderColor,
-              width: 2,
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check,
-            color: iconColor,
-            size: 20,
-          ),
+          curve: Curves.easeOut,
+          child: Icon(Icons.check, color: iconColor, size: 22),
         ),
       ),
     );

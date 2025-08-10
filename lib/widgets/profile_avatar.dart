@@ -16,8 +16,7 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: onTap,
@@ -33,38 +32,46 @@ class ProfileAvatar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: colorScheme.primary.withOpacity(0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child:
-            (imageUrl != null && imageUrl!.isNotEmpty)
-                ? ClipRRect(
-                  borderRadius: BorderRadius.circular(size / 2),
-                  child: Image.network(
-                    imageUrl!,
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildInitialsWidget(context);
-                    },
-                  ),
-                )
-                : _buildInitialsWidget(context),
+        clipBehavior: Clip.antiAlias, // Ensures image stays circular
+        child: _buildAvatarContent(context),
       ),
     );
   }
 
-  Widget _buildInitialsWidget(BuildContext context) {
+  Widget _buildAvatarContent(BuildContext context) {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Image.network(
+        imageUrl!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress != null) {
+            return _buildInitialsWidget(); // Placeholder while loading
+          }
+          return child;
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildInitialsWidget();
+        },
+      );
+    }
+    return _buildInitialsWidget();
+  }
+
+  Widget _buildInitialsWidget() {
     return Center(
       child: Text(
-        initials,
+        initials.toUpperCase(),
         style: TextStyle(
           fontSize: size * 0.35,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
       ),

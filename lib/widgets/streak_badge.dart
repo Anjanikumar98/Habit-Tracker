@@ -11,17 +11,38 @@ class StreakBadge extends StatelessWidget {
     if (streak == 0) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final badgeColor = isActive ? Colors.orange : Colors.grey[300];
+
+    // Colors & styles
+    final badgeGradient =
+        isActive
+            ? const LinearGradient(
+              colors: [Colors.deepOrange, Colors.orangeAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+            : LinearGradient(colors: [Colors.grey[300]!, Colors.grey[400]!]);
+
     final iconColor = isActive ? Colors.white : Colors.black54;
     final textColor = isActive ? Colors.white : Colors.black87;
 
     return Tooltip(
-      message: 'Current streak: $streak day(s)',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      message: '🔥 Current streak: $streak day${streak > 1 ? 's' : ''}',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(12),
+          gradient: badgeGradient,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow:
+              isActive
+                  ? [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.4),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -29,17 +50,16 @@ class StreakBadge extends StatelessWidget {
             Icon(
               Icons.local_fire_department,
               color: iconColor,
-              size: 14,
+              size: 16,
               semanticLabel: 'Flame icon for streak',
             ),
-
-            const SizedBox(width: 4),
-
+            const SizedBox(width: 5),
             Text(
               '$streak',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
           ],
@@ -48,3 +68,4 @@ class StreakBadge extends StatelessWidget {
     );
   }
 }
+
