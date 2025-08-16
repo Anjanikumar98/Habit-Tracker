@@ -7,6 +7,7 @@ import '../models/habit.dart';
 import '../models/habit_completion.dart';
 import '../services/database_service.dart';
 
+
 class HabitProvider extends ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
   final AnalyticsService _analyticsService = AnalyticsService();

@@ -4,6 +4,7 @@ import 'package:habit_tracker/models/users.dart';
 import 'package:habit_tracker/services/auth_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
 

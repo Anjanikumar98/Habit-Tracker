@@ -4,6 +4,7 @@ import '../models/user_settings.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
 
+
 class SettingsProvider extends ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
   final NotificationService _notificationService = NotificationService();
